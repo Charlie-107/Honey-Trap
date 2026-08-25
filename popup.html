@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IoT Security Auditor</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+
+  <!-- Top Header & Engine Status -->
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-icon">🛡️</span>
+      <div>
+        <h1 class="brand-title">IoT Auditor</h1>
+        <span class="engine-badge" id="wasm-status">Rust / Wasm Active</span>
+      </div>
+    </div>
+    <div class="live-status">
+      <span class="status-pulse"></span>
+      <span class="status-text">Live Monitoring</span>
+    </div>
+  </header>
+
+  <!-- Target Metadata -->
+  <section class="target-section">
+    <div class="target-row">
+      <span class="target-label">Target Gateway:</span>
+      <span class="target-url" id="target-url">http://192.168.1.1/admin</span>
+    </div>
+  </section>
+
+  <!-- Security Score & Severity Counters -->
+  <section class="score-card">
+    <div class="score-display">
+      <div class="score-circle score-critical">
+        <span class="score-number" id="security-score">42</span>
+        <span class="score-max">/100</span>
+      </div>
+      <div class="score-meta">
+        <span class="score-rating">High Risk Posture</span>
+        <span class="score-subtext">Immediate remediation required</span>
+      </div>
+    </div>
+
+    <div class="severity-grid">
+      <div class="severity-item critical">
+        <span class="sev-count" id="count-critical">2</span>
+        <span class="sev-label">Critical</span>
+      </div>
+      <div class="severity-item high">
+        <span class="sev-count" id="count-high">1</span>
+        <span class="sev-label">High</span>
+      </div>
+      <div class="severity-item medium">
+        <span class="sev-count" id="count-medium">3</span>
+        <span class="sev-label">Medium</span>
+      </div>
+      <div class="severity-item low">
+        <span class="sev-count" id="count-low">0</span>
+        <span class="sev-label">Low</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Transport & Header Integrity Panel -->
+  <section class="integrity-section">
+    <h2 class="section-title">Transport & Header Defenses</h2>
+    <div class="integrity-grid">
+      <div class="integrity-badge fail" id="chk-https">
+        <span class="badge-icon">✕</span> HTTPS / HSTS
+      </div>
+      <div class="integrity-badge fail" id="chk-csp">
+        <span class="badge-icon">✕</span> CSP Header
+      </div>
+      <div class="integrity-badge pass" id="chk-xframe">
+        <span class="badge-icon">✓</span> X-Frame-Options
+      </div>
+      <div class="integrity-badge fail" id="chk-cookies">
+        <span class="badge-icon">✕</span> Secure Cookie
+      </div>
+    </div>
+  </section>
+
+  <!-- Vulnerability Feed & Explainable AI (XAI) -->
+  <section class="findings-section">
+    <div class="findings-header">
+      <h2 class="section-title">Detected Findings</h2>
+      <!-- Severity Filter -->
+      <div class="filter-group">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="critical">Critical</button>
+        <button class="filter-btn" data-filter="high">High</button>
+        <button class="filter-btn" data-filter="medium">Med</button>
+      </div>
+    </div>
+
+    <div class="findings-list" id="findings-container">
+      
+      <!-- Finding Card 1: DOM XSS -->
+      <article class="vuln-card critical-border">
+        <div class="vuln-top">
+          <span class="vuln-title">DOM-Based XSS</span>
+          <span class="vuln-tag tag-critical">Critical</span>
+        </div>
+        <p class="vuln-detail">Unsanitized input reflection detected in element <code class="code-target">input#device_name</code>.</p>
+        <div class="impact-box">
+          <strong>Exploit Impact:</strong> Allows execution of arbitrary JavaScript, enabling session hijacking and unauthorized device control.
+        </div>
+        <!-- SHAP Feature Attribution -->
+        <div class="shap-attribution">
+          <span class="shap-header">💡 SHAP Feature Attribution:</span>
+          <ul class="shap-list">
+            <li>Unescaped payload tag: <code class="shap-val">+0.74</code></li>
+            <li>DOM sink proximity (innerHTML): <code class="shap-val">+0.18</code></li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- Finding Card 2: CSRF State-Changing -->
+      <article class="vuln-card high-border">
+        <div class="vuln-top">
+          <span class="vuln-title">Missing CSRF Token</span>
+          <span class="vuln-tag tag-high">High</span>
+        </div>
+        <p class="vuln-detail">State-changing endpoint <code class="code-target">POST /api/system/reboot</code> lacks anti-forgery protection.</p>
+        <div class="impact-box">
+          <strong>Exploit Impact:</strong> Permits unauthorized third-party origins to trigger state changes without user consent.
+        </div>
+        <!-- SHAP Feature Attribution -->
+        <div class="shap-attribution">
+          <span class="shap-header">💡 SHAP Feature Attribution:</span>
+          <ul class="shap-list">
+            <li>Missing Origin/Referer check: <code class="shap-val">+0.62</code></li>
+            <li>State-altering verb without nonce: <code class="shap-val">+0.29</code></li>
+          </ul>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- Controls & Export Actions -->
+  <footer class="app-footer">
+    <div class="btn-group">
+      <button class="btn btn-primary" id="btn-run-audit">
+        <span>↻</span> Run Audit
+      </button>
+      <button class="btn btn-secondary" id="btn-export-report">
+        <span>⤓</span> Export Report
+      </button>
+    </div>
+    <div class="full-view-row">
+      <a href="#" class="full-dashboard-link" id="link-expanded-view">Open Full Security Dashboard ↗</a>
+    </div>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

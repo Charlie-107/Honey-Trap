@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IoT Security Auditor - Executive Dashboard</title>
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+
+  <!-- Navigation Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-shield">🛡️</span>
+      <div class="brand-text">
+        <h2>IoT Auditor</h2>
+        <span class="subtext">Enterprise XAI Suite</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="#overview" class="nav-item active" data-tab="overview">
+        <span class="nav-icon">📊</span> Overview & Posture
+      </a>
+      <a href="#devices" class="nav-item" data-tab="devices">
+        <span class="nav-icon">📡</span> Network IoT Devices
+      </a>
+      <a href="#xai" class="nav-item" data-tab="xai">
+        <span class="nav-icon">💡</span> Explainable AI (SHAP)
+      </a>
+      <a href="#headers" class="nav-item" data-tab="headers">
+        <span class="nav-icon">🔒</span> Transport & Headers
+      </a>
+      <a href="#logs" class="nav-item" data-tab="logs">
+        <span class="nav-icon">📋</span> Audit Logs & Reports
+      </a>
+    </nav>
+
+    <div class="engine-info-box">
+      <div class="engine-badge-row">
+        <span class="status-dot"></span>
+        <span class="engine-title">Wasm Engine Active</span>
+      </div>
+      <p class="engine-sub">Manifest V3 Sandboxed Rust Subsystem</p>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+    
+    <!-- Top Header -->
+    <header class="top-bar">
+      <div>
+        <h1 class="page-title" id="tab-title">Network Security Overview</h1>
+        <p class="page-subtitle">Real-time passive diagnostic and Explainable AI analysis of local IoT infrastructure.</p>
+      </div>
+      <div class="top-actions">
+        <button class="btn btn-secondary" id="btn-refresh-network">
+          <span>🔄</span> Refresh Scan
+        </button>
+        <button class="btn btn-primary" id="btn-export-full-report">
+          <span>⤓</span> Export Audit Dossier
+        </button>
+      </div>
+    </header>
+
+    <!-- Tab 1: Overview & Posture -->
+    <section id="tab-overview" class="tab-pane active">
+      <!-- High-Level Metric Cards -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <span class="metric-label">Network Risk Score</span>
+          <div class="metric-val-row">
+            <span class="metric-val text-critical" id="metric-score">48</span>
+            <span class="metric-max">/100</span>
+          </div>
+          <span class="metric-sub text-critical">⚠️ High Risk Posture Detected</span>
+        </div>
+
+        <div class="metric-card">
+          <span class="metric-label">Audited IoT Devices</span>
+          <div class="metric-val-row">
+            <span class="metric-val" id="metric-device-count">7</span>
+            <span class="metric-unit">Active</span>
+          </div>
+          <span class="metric-sub text-warning">4 devices require hardening</span>
+        </div>
+
+        <div class="metric-card">
+          <span class="metric-label">Critical / High Flaws</span>
+          <div class="metric-val-row">
+            <span class="metric-val text-critical" id="metric-flaw-count">5</span>
+            <span class="metric-unit">Vulnerabilities</span>
+          </div>
+          <span class="metric-sub">DOM XSS & Missing CSRF</span>
+        </div>
+
+        <div class="metric-card">
+          <span class="metric-label">Transport Defense</span>
+          <div class="metric-val-row">
+            <span class="metric-val text-warning">28%</span>
+            <span class="metric-unit">Enforced</span>
+          </div>
+          <span class="metric-sub text-critical">5/7 devices lack HTTPS/CSP</span>
+        </div>
+      </div>
+
+      <!-- Overview Charts / Split Section -->
+      <div class="overview-grid">
+        <!-- Live Vulnerability Distribution -->
+        <div class="card-panel">
+          <h3 class="panel-heading">Vulnerability Severity Breakdown</h3>
+          <div class="severity-bars">
+            <div class="sev-bar-row">
+              <span class="sev-name">Critical (DOM XSS / RCE)</span>
+              <div class="bar-track"><div class="bar-fill bg-critical" style="width: 45%;"></div></div>
+              <span class="sev-num">2</span>
+            </div>
+            <div class="sev-bar-row">
+              <span class="sev-name">High (Missing Anti-CSRF)</span>
+              <div class="bar-track"><div class="bar-fill bg-high" style="width: 60%;"></div></div>
+              <span class="sev-num">3</span>
+            </div>
+            <div class="sev-bar-row">
+              <span class="sev-name">Medium (Insecure Headers / CSP)</span>
+              <div class="bar-track"><div class="bar-fill bg-medium" style="width: 80%;"></div></div>
+              <span class="sev-num">4</span>
+            </div>
+            <div class="sev-bar-row">
+              <span class="sev-name">Low (Cookie Flag Omission)</span>
+              <div class="bar-track"><div class="bar-fill bg-low" style="width: 40%;"></div></div>
+              <span class="sev-num">2</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active Target Quick Status -->
+        <div class="card-panel">
+          <h3 class="panel-heading">Active Browser Target Inspection</h3>
+          <div class="target-inspect-box">
+            <div class="inspect-field">
+              <span class="inspect-key">Active URL:</span>
+              <span class="inspect-val code" id="inspect-url">http://192.168.1.1/admin/dashboard</span>
+            </div>
+            <div class="inspect-field">
+              <span class="inspect-key">Device Classification:</span>
+              <span class="inspect-val badge badge-blue" id="inspect-device-type">Smart Gateway / Router</span>
+            </div>
+            <div class="inspect-field">
+              <span class="inspect-key">Sandboxed Analysis Engine:</span>
+              <span class="inspect-val">WebAssembly Core (Rust v1.75 Target)</span>
+            </div>
+            <div class="inspect-field">
+              <span class="inspect-key">Top Identified Threat:</span>
+              <span class="inspect-val text-critical">Missing CSRF Token on System Reboot POST form</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 2: Connected IoT Devices List -->
+    <section id="tab-devices" class="tab-pane">
+      <div class="table-container card-panel">
+        <div class="panel-header-flex">
+          <div>
+            <h3 class="panel-heading">Connected Local IoT Inventory</h3>
+            <p class="panel-sub">Discovered IoT gateways, IP cameras, environmental sensors, and smart bridges on the active subnet.</p>
+          </div>
+          <div class="search-box">
+            <input type="text" id="device-search" placeholder="Search by IP, MAC, or Device Name..." class="form-input">
+          </div>
+        </div>
+
+        <table class="data-table" id="devices-table">
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>Device Name</th>
+              <th>IP Address</th>
+              <th>MAC Address</th>
+              <th>Category</th>
+              <th>Open Web Ports</th>
+              <th>Risk Score</th>
+              <th>Identified Flaws</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="devices-tbody">
+            <!-- Dynamically injected via dashboard.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Tab 3: Explainable AI (SHAP) -->
+    <section id="tab-xai" class="tab-pane">
+      <div class="card-panel">
+        <h3 class="panel-heading">SHAP (Shapley Additive exPlanations) Feature Attributions</h3>
+        <p class="panel-sub">Mathematical quantification of feature influence on security vulnerability classifications calculated in-browser.</p>
+        
+        <div class="xai-models-grid" id="xai-container">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 4: Transport & Security Headers -->
+    <section id="tab-headers" class="tab-pane">
+      <div class="card-panel">
+        <h3 class="panel-heading">Network Transport & Defensive Header Compliance Matrix</h3>
+        <p class="panel-sub">Evaluation against OWASP IoT Top 10 and NIST SP 800-213 guidelines for smart devices.</p>
+        
+        <table class="data-table" id="headers-table">
+          <thead>
+            <tr>
+              <th>Device</th>
+              <th>Endpoint</th>
+              <th>HTTPS / TLS</th>
+              <th>HSTS Header</th>
+              <th>Content-Security-Policy</th>
+              <th>X-Frame-Options</th>
+              <th>Cookie Security Flags</th>
+            </tr>
+          </thead>
+          <tbody id="headers-tbody">
+            <!-- Dynamically injected via dashboard.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Tab 5: Audit Logs -->
+    <section id="tab-logs" class="tab-pane">
+      <div class="card-panel">
+        <div class="panel-header-flex">
+          <div>
+            <h3 class="panel-heading">Real-Time Security Event Audit Stream</h3>
+            <p class="panel-sub">Chronological recording of DOM mutations, passive header checks, and risk transitions.</p>
+          </div>
+          <button class="btn btn-secondary" id="btn-clear-logs">Clear Logs</button>
+        </div>
+        
+        <div class="log-stream" id="log-stream-container">
+          <!-- Logs injected -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>

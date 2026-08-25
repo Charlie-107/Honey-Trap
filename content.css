@@ -1,0 +1,30 @@
+/* content.css */
+
+/* Highlight vulnerable inputs & forms */
+.iot-sec-highlight {
+  outline: 2px dashed #ef4444 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.4) !important;
+  transition: outline 0.2s ease-in-out;
+}
+
+/* Injected Warning Badge */
+.iot-sec-warning-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #7f1d1d !important;
+  color: #fca5a5 !important;
+  border: 1px solid #ef4444 !important;
+  border-radius: 4px !important;
+  padding: 2px 6px !important;
+  font-size: 11px !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-weight: 600 !important;
+  margin-left: 6px !important;
+  vertical-align: middle !important;
+  z-index: 99999 !important;
+  cursor: help !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+  user-select: none !important;
+}
