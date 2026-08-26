@@ -148,7 +148,7 @@
             </div>
             <div class="inspect-field">
               <span class="inspect-key">Sandboxed Analysis Engine:</span>
-              <span class="inspect-val">WebAssembly Core (Rust v1.75 Target)</span>
+              <span class="inspect-val">WebAssembly & Rust 5-Stage Scanner</span>
             </div>
             <div class="inspect-field">
               <span class="inspect-key">Top Identified Threat:</span>
@@ -157,18 +157,167 @@
           </div>
         </div>
       </div>
+
+      <!-- 5-Stage Network Audit Pipeline Overview -->
+      <div class="card-panel" style="margin-top: 24px;">
+        <div class="panel-header-flex">
+          <div>
+            <h3 class="panel-heading">🛡️ 5-Stage IoT Security Audit Pipeline</h3>
+            <p class="panel-sub" style="margin-bottom:0;">Multi-layered defense-in-depth framework executed across all local subnet IoT devices.</p>
+          </div>
+          <span class="badge badge-blue">NIST SP 800-213 & OWASP IoT Standard</span>
+        </div>
+
+        <div class="stages-summary-grid">
+          <div class="stage-summary-card">
+            <div class="stage-header">
+              <span class="stage-num-badge">1</span>
+              <div>
+                <h4>Attack Surface Discovery</h4>
+                <span class="stage-tool-tag">nmap -sS -p- -T4</span>
+              </div>
+            </div>
+            <p class="stage-desc">Maps all 65,535 ports to uncover unlisted, legacy, or rogue listening services.</p>
+          </div>
+
+          <div class="stage-summary-card">
+            <div class="stage-header">
+              <span class="stage-num-badge">2</span>
+              <div>
+                <h4>Fingerprinting & Banners</h4>
+                <span class="stage-tool-tag">nmap -sV -O --version-all</span>
+              </div>
+            </div>
+            <p class="stage-desc">Identifies exact daemon software versions (e.g. OpenSSH, Boa) to match against CVE databases.</p>
+          </div>
+
+          <div class="stage-summary-card">
+            <div class="stage-header">
+              <span class="stage-num-badge">3</span>
+              <div>
+                <h4>Vulnerability Assessment</h4>
+                <span class="stage-tool-tag">nmap --script "vuln and safe"</span>
+              </div>
+            </div>
+            <p class="stage-desc">Checks for known CVEs, SSL/TLS misconfigurations, default credentials, and unpatched flaws.</p>
+          </div>
+
+          <div class="stage-summary-card">
+            <div class="stage-header">
+              <span class="stage-num-badge">4</span>
+              <div>
+                <h4>Host Hardening</h4>
+                <span class="stage-tool-tag">Lynis / OpenSCAP</span>
+              </div>
+            </div>
+            <p class="stage-desc">Assesses kernel hardening, file permissions, firewall status, authentication & CIS compliance.</p>
+          </div>
+
+          <div class="stage-summary-card">
+            <div class="stage-header">
+              <span class="stage-num-badge">5</span>
+              <div>
+                <h4>Application Security</h4>
+                <span class="stage-tool-tag">OWASP ZAP / Nikto</span>
+              </div>
+            </div>
+            <p class="stage-desc">Tests web interfaces for missing defensive headers (CSP, HSTS), XSS sinks, and directory exposure.</p>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- Tab 2: Connected IoT Devices List -->
     <section id="tab-devices" class="tab-pane">
+      <!-- Scanner Controls & Add Device Toolbar -->
+      <div class="scanner-controls-grid">
+        <!-- Subnet Scanner Panel -->
+        <div class="card-panel scanner-panel">
+          <div class="panel-header-flex" style="margin-bottom:12px;">
+            <div>
+              <h3 class="panel-heading">📡 Rust Nmap / ARP Network Scanner</h3>
+              <p class="panel-sub" style="margin-bottom:0;">Scan the local network subnet to discover connected IoT devices, open ports, and MAC addresses.</p>
+            </div>
+            <div id="rust-engine-badge" class="engine-pill online">
+              <span class="status-dot"></span>
+              <span id="rust-status-label">Rust Engine Active (Port 5000)</span>
+            </div>
+          </div>
+
+          <div class="scanner-form-row">
+            <div class="form-group flex-2">
+              <label for="scanner-subnet" class="form-label">Subnet Range</label>
+              <input type="text" id="scanner-subnet" value="192.168.1.0/24" placeholder="192.168.1.0/24" class="form-input">
+            </div>
+            <div class="form-group flex-2">
+              <label for="scanner-mode" class="form-label">Scan Strategy</label>
+              <select id="scanner-mode" class="form-input form-select">
+                <option value="auto">Rust Fast Socket & ARP Discovery (Recommended)</option>
+                <option value="nmap">Rust Nmap Engine (-sT Deep Ports Scan)</option>
+                <option value="browser">In-Browser HTTP/Port Probe (Fallback)</option>
+              </select>
+            </div>
+            <div class="form-group flex-1 form-btn-group">
+              <button class="btn btn-primary btn-scan" id="btn-scan-network">
+                <span id="scan-btn-icon">⚡</span>
+                <span id="scan-btn-text">Scan Network</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Live Scanning Progress / Status Output -->
+          <div id="scan-progress-container" class="scan-progress-box" style="display: none;">
+            <div class="progress-bar-track">
+              <div id="scan-progress-fill" class="progress-bar-fill" style="width: 0%;"></div>
+            </div>
+            <div class="progress-status-row">
+              <span id="scan-status-text" class="scan-status-text">Initializing Rust scanner...</span>
+              <span id="scan-percent-text" class="scan-percent-text">0%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Device Target Search Panel -->
+        <div class="card-panel add-device-panel">
+          <h3 class="panel-heading">🔍 Add Device / Search Target IP</h3>
+          <p class="panel-sub" style="margin-bottom:12px;">Probe a specific IP address directly to analyze its headers, ports, and vulnerabilities.</p>
+
+          <div class="add-device-form-row">
+            <div class="form-group flex-2">
+              <label for="add-device-ip" class="form-label">Device Target IP</label>
+              <input type="text" id="add-device-ip" placeholder="e.g. 192.168.1.1 or 192.168.1.50" class="form-input">
+            </div>
+            <div class="form-group flex-2">
+              <label for="add-device-name" class="form-label">Custom Name (Optional)</label>
+              <input type="text" id="add-device-name" placeholder="Auto-inferred if blank" class="form-input">
+            </div>
+            <div class="form-group flex-1 form-btn-group">
+              <button class="btn btn-secondary btn-scan" id="btn-add-device">
+                <span>➕</span>
+                <span id="add-btn-text">Scan & Add IP</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Device Inventory Table -->
       <div class="table-container card-panel">
         <div class="panel-header-flex">
           <div>
             <h3 class="panel-heading">Connected Local IoT Inventory</h3>
             <p class="panel-sub">Discovered IoT gateways, IP cameras, environmental sensors, and smart bridges on the active subnet.</p>
           </div>
-          <div class="search-box">
-            <input type="text" id="device-search" placeholder="Search by IP, MAC, or Device Name..." class="form-input">
+          <div class="table-toolbar">
+            <div class="search-box">
+              <input type="text" id="device-search" placeholder="Search by IP, MAC, or Device Name..." class="form-input">
+            </div>
+            <button class="btn btn-secondary" id="btn-reset-demo" title="Reset Demo Data">
+              <span>🔄</span> Reset
+            </button>
+            <button class="btn btn-secondary" id="btn-clear-devices" title="Clear Device Inventory">
+              <span>🗑️</span> Clear
+            </button>
           </div>
         </div>
 
@@ -248,6 +397,56 @@
     </section>
 
   </main>
+
+  <!-- 5-Stage Security Audit Modal -->
+  <div id="audit-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-header-left">
+          <span class="modal-icon">🛡️</span>
+          <div>
+            <h2 id="modal-device-name" class="modal-title">Device Security Audit</h2>
+            <div class="modal-meta-row">
+              <span id="modal-device-ip" class="code-cell">192.168.1.1</span>
+              <span id="modal-device-mac" class="code-cell" style="color: #94a3b8;">00:00:00:00:00:00</span>
+              <span id="modal-device-cat" class="badge badge-blue">Gateway</span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-header-right">
+          <div class="modal-score-box">
+            <span class="score-label">Hardening Posture</span>
+            <div class="score-row">
+              <span id="modal-device-score" class="modal-score-val text-warning">65</span>
+              <span class="score-max">/100</span>
+            </div>
+          </div>
+          <button class="modal-close-btn" id="btn-close-modal">✕</button>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-section-title">
+          <span>📋 5-Stage Comprehensive Network & Device Audit</span>
+          <span class="modal-sub">NIST SP 800-213 & OWASP IoT Audit Verification</span>
+        </div>
+
+        <!-- 5-Stage Cards Container -->
+        <div class="audit-stages-list" id="modal-stages-list">
+          <!-- Dynamically populated via dashboard.js -->
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btn-modal-re-audit">
+          <span>🔄</span> Re-Audit (All 5 Stages)
+        </button>
+        <button class="btn btn-primary" id="btn-modal-done">
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
 
   <script src="dashboard.js"></script>
 </body>

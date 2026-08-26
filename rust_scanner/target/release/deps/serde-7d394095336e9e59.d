@@ -1,0 +1,14 @@
+/home/charlie/Projects/final year project/rust_scanner/target/release/deps/serde-7d394095336e9e59.d: /home/charlie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/lib.rs /home/charlie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/integer128.rs /home/charlie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/mod.rs /home/charlie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/de.rs /home/charlie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/ser.rs /home/charlie/Projects/final\ year\ project/rust_scanner/target/release/build/serde-3c6e62005451699c/out/private.rs
+
+/home/charlie/Projects/final year project/rust_scanner/target/release/deps/libserde-7d394095336e9e59.rlib: /home/charlie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/lib.rs /home/charlie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/integer128.rs /home/charlie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/mod.rs /home/charlie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/de.rs /home/charlie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/ser.rs /home/charlie/Projects/final\ year\ project/rust_scanner/target/release/build/serde-3c6e62005451699c/out/private.rs
+
+/home/charlie/Projects/final year project/rust_scanner/target/release/deps/libserde-7d394095336e9e59.rmeta: /home/charlie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/lib.rs /home/charlie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/integer128.rs /home/charlie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/mod.rs /home/charlie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/de.rs /home/charlie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/ser.rs /home/charlie/Projects/final\ year\ project/rust_scanner/target/release/build/serde-3c6e62005451699c/out/private.rs
+
+/home/charlie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/lib.rs:
+/home/charlie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/integer128.rs:
+/home/charlie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/mod.rs:
+/home/charlie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/de.rs:
+/home/charlie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/ser.rs:
+/home/charlie/Projects/final\ year\ project/rust_scanner/target/release/build/serde-3c6e62005451699c/out/private.rs:
+
+# env-dep:OUT_DIR=/home/charlie/Projects/final year project/rust_scanner/target/release/build/serde-3c6e62005451699c/out
