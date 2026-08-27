@@ -454,12 +454,71 @@ body {
 .btn-primary {
   background: var(--accent-blue);
   color: #0f172a;
+  box-shadow: 0 2px 8px rgba(56, 189, 248, 0.25);
+}
+
+.btn-primary:hover {
+  background: #7dd3fc;
+  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.35);
 }
 
 .btn-secondary {
   background: var(--bg-secondary);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
+}
+
+.btn-run-audit {
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.btn-run-audit.loading {
+  opacity: 0.85;
+  cursor: wait;
+}
+
+/* Inline Audit Progress Bar in Popup */
+.popup-progress-container {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  animation: fadeIn 0.2s ease-in;
+}
+
+.popup-progress-track {
+  height: 5px;
+  background: #334155;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.popup-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-blue), #10b981);
+  border-radius: 3px;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.popup-progress-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+}
+
+.popup-progress-status {
+  color: var(--accent-blue);
+  font-weight: 600;
+}
+
+.popup-progress-percent {
+  font-family: monospace;
+  font-weight: 700;
+  color: #fff;
 }
 
 .full-view-row {

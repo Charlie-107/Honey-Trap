@@ -817,7 +817,7 @@ window.removeDevice = function(id) {
   }
 };
 
-// Network Subnet Scan Execution
+// Network Subnet Scan Execution (Universal Run Audit)
 async function runNetworkScan() {
   const subnetInput = document.getElementById("scanner-subnet");
   let subnet = (subnetInput ? subnetInput.value.trim() : "") || "192.168.1.0/24";
@@ -832,30 +832,63 @@ async function runNetworkScan() {
   }
 
   const mode = document.getElementById("scanner-mode")?.value || "rust";
-  const btn = document.getElementById("btn-scan-network");
-  const btnText = document.getElementById("scan-btn-text");
+  
+  // Top bar Run Audit button
+  const topBtn = document.getElementById("btn-refresh-network");
+  const topBtnText = document.getElementById("top-audit-btn-text");
+  const topBtnIcon = document.getElementById("top-audit-icon");
+
+  // Tab 2 Run Audit button
+  const tabBtn = document.getElementById("btn-scan-network");
+  const tabBtnText = document.getElementById("scan-btn-text");
+
+  // Global Progress Bar (across all tabs)
+  const globalProgress = document.getElementById("dash-global-progress");
+  const globalFill = document.getElementById("global-progress-fill");
+  const globalStatus = document.getElementById("global-audit-status");
+  const globalPercent = document.getElementById("global-audit-percent");
+
+  // Local Tab 2 Progress Box
   const progressBox = document.getElementById("scan-progress-container");
   const progressFill = document.getElementById("scan-progress-fill");
   const statusText = document.getElementById("scan-status-text");
   const percentText = document.getElementById("scan-percent-text");
 
-  if (btn) {
-    btn.classList.add("loading");
-    btn.disabled = true;
+  // Activate loading states
+  if (topBtn) {
+    topBtn.classList.add("loading");
+    topBtn.disabled = true;
   }
-  if (btnText) btnText.textContent = "Scanning Subnet...";
+  if (topBtnText) topBtnText.textContent = "Auditing Subnet...";
+  if (topBtnIcon) topBtnIcon.className = "audit-icon-spin spin";
+
+  if (tabBtn) {
+    tabBtn.classList.add("loading");
+    tabBtn.disabled = true;
+  }
+  if (tabBtnText) tabBtnText.textContent = "Auditing Subnet...";
+
+  if (globalProgress) globalProgress.style.display = "block";
+  if (globalFill) globalFill.style.width = "15%";
+  if (globalPercent) globalPercent.textContent = "15%";
+  if (globalStatus) globalStatus.textContent = `Initializing 5-stage network security audit on ${subnet}...`;
+
   if (progressBox) progressBox.style.display = "block";
   if (progressFill) progressFill.style.width = "15%";
   if (percentText) percentText.textContent = "15%";
   if (statusText) statusText.textContent = `Probing subnet ${subnet} via ${mode === "nmap" ? "Nmap" : "Rust"} engine...`;
 
-  addAuditLog("INFO", `Initiated network subnet scan on target subnet ${subnet} [Mode: ${mode}]`);
+  addAuditLog("INFO", `Initiated 5-Stage Network Audit on target subnet ${subnet} [Mode: ${mode}]`);
 
   try {
     let scannedDevices = null;
 
     // Check if Rust backend is accessible
     try {
+      if (globalFill) globalFill.style.width = "40%";
+      if (globalPercent) globalPercent.textContent = "40%";
+      if (globalStatus) globalStatus.textContent = `Scanning live endpoints and probing ports on ${subnet}...`;
+
       if (progressFill) progressFill.style.width = "40%";
       if (percentText) percentText.textContent = "40%";
       if (statusText) statusText.textContent = `Connecting to Rust Scanner daemon on http://127.0.0.1:5000...`;
@@ -869,6 +902,10 @@ async function runNetworkScan() {
 
       if (response.ok) {
         scannedDevices = await response.json();
+        if (globalFill) globalFill.style.width = "75%";
+        if (globalPercent) globalPercent.textContent = "75%";
+        if (globalStatus) globalStatus.textContent = `Auditing OWASP defense headers and XAI SHAP vectors...`;
+
         if (progressFill) progressFill.style.width = "85%";
         if (percentText) percentText.textContent = "85%";
         if (statusText) statusText.textContent = `Received ${scannedDevices.length} live devices from Rust Scanner. Auditing headers...`;
@@ -879,6 +916,10 @@ async function runNetworkScan() {
 
     // Fallback if backend wasn't reached
     if (!scannedDevices || scannedDevices.length === 0) {
+      if (globalFill) globalFill.style.width = "60%";
+      if (globalPercent) globalPercent.textContent = "60%";
+      if (globalStatus) globalStatus.textContent = "Executing client-side heuristic subnet discovery & header audit...";
+
       if (statusText) statusText.textContent = "Rust backend offline. Executing client-side heuristic subnet discovery...";
       if (progressFill) progressFill.style.width = "60%";
       if (percentText) percentText.textContent = "60%";
@@ -886,6 +927,10 @@ async function runNetworkScan() {
 
       scannedDevices = await performBrowserFallbackScan(subnet);
     }
+
+    if (globalFill) globalFill.style.width = "100%";
+    if (globalPercent) globalPercent.textContent = "100%";
+    if (globalStatus) globalStatus.textContent = `✓ 5-Stage Network Audit Complete. Indexed ${scannedDevices.length} IoT nodes on ${subnet}.`;
 
     if (progressFill) progressFill.style.width = "100%";
     if (percentText) percentText.textContent = "100%";
@@ -897,22 +942,32 @@ async function runNetworkScan() {
     renderHeadersTable(currentDevices);
     updateOverviewMetrics(currentDevices);
 
-    addAuditLog("INFO", `Subnet scan completed. Discovered and indexed ${scannedDevices.length} IoT nodes on subnet ${subnet}.`);
+    addAuditLog("INFO", `5-Stage Network Audit completed. Discovered and indexed ${scannedDevices.length} IoT nodes on subnet ${subnet}.`);
 
     setTimeout(() => {
+      if (globalProgress) globalProgress.style.display = "none";
+      if (globalFill) globalFill.style.width = "0%";
       if (progressBox) progressBox.style.display = "none";
       if (progressFill) progressFill.style.width = "0%";
-    }, 3500);
+    }, 2800);
 
   } catch (err) {
+    if (globalStatus) globalStatus.textContent = `Audit error: ${err.message}`;
     if (statusText) statusText.textContent = `Scan failed: ${err.message}`;
-    addAuditLog("CRIT", `Scan error: ${err.message}`);
+    addAuditLog("CRIT", `Audit error: ${err.message}`);
   } finally {
-    if (btn) {
-      btn.classList.remove("loading");
-      btn.disabled = false;
+    if (topBtn) {
+      topBtn.classList.remove("loading");
+      topBtn.disabled = false;
     }
-    if (btnText) btnText.textContent = "Scan Network";
+    if (topBtnText) topBtnText.textContent = "Run Audit";
+    if (topBtnIcon) topBtnIcon.className = "audit-icon-spin";
+
+    if (tabBtn) {
+      tabBtn.classList.remove("loading");
+      tabBtn.disabled = false;
+    }
+    if (tabBtnText) tabBtnText.textContent = "Run Audit";
   }
 }
 
@@ -1088,6 +1143,291 @@ function generateClientSideDeviceProfile(ip, customName) {
   };
 }
 
+// -------------------------------------------------------------
+// Interactive 4 Top Metric Cards Drilldown Modal Renderers
+// -------------------------------------------------------------
+
+function openScoreDetailModal() {
+  const modal = document.getElementById("modal-detail-score");
+  const scoreValElem = document.getElementById("drilldown-score-val");
+  const postureElem = document.getElementById("drilldown-score-posture");
+  const ringFill = document.getElementById("drilldown-score-ring");
+  const listContainer = document.getElementById("drilldown-device-scores-list");
+
+  if (!modal) return;
+
+  const avgScore = currentDevices.length 
+    ? Math.round(currentDevices.reduce((a, b) => a + (b.score || 0), 0) / currentDevices.length) 
+    : 100;
+
+  if (scoreValElem) scoreValElem.textContent = avgScore;
+  if (postureElem) {
+    if (avgScore >= 80) {
+      postureElem.textContent = "✓ Low Risk Posture";
+      postureElem.className = "text-safe";
+    } else if (avgScore >= 50) {
+      postureElem.textContent = "⚠️ Moderate Risk Posture";
+      postureElem.className = "text-warning";
+    } else {
+      postureElem.textContent = "⚠️ High Risk Posture";
+      postureElem.className = "text-critical";
+    }
+  }
+
+  // SVG Ring offset (r = 32 -> C = 201.06)
+  const radius = 32;
+  const circumference = 2 * Math.PI * radius;
+  const clamped = Math.max(0, Math.min(100, avgScore));
+  const offset = circumference - (clamped / 100) * circumference;
+
+  if (ringFill) {
+    ringFill.style.strokeDasharray = circumference;
+    ringFill.style.strokeDashoffset = offset;
+    ringFill.style.stroke = avgScore >= 80 ? "var(--color-low)" : avgScore >= 50 ? "var(--color-medium)" : "var(--color-critical)";
+  }
+
+  // Per device scores list
+  if (listContainer) {
+    listContainer.innerHTML = "";
+    if (currentDevices.length === 0) {
+      listContainer.innerHTML = `<div style="text-align:center; padding:12px; color:var(--text-muted);">No devices scanned yet.</div>`;
+    } else {
+      currentDevices.forEach(d => {
+        const row = document.createElement("div");
+        row.className = "drilldown-device-row";
+        const badgeClass = d.score >= 80 ? "badge-low" : d.score >= 50 ? "badge-medium" : "badge-critical";
+
+        row.innerHTML = `
+          <div class="drilldown-dev-info">
+            <span class="online-dot"></span>
+            <div>
+              <strong>${escapeHtml(d.name)}</strong>
+              <div style="font-size:11px; color:var(--text-muted); font-family:monospace;">${escapeHtml(d.ip)} • ${escapeHtml(d.category || "IoT")}</div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="badge ${badgeClass}">${d.score}/100</span>
+            <button class="btn btn-secondary" style="padding:3px 8px; font-size:11px;" onclick="window.inspectDevice('${d.id}')">Audit</button>
+          </div>
+        `;
+        listContainer.appendChild(row);
+      });
+    }
+  }
+
+  modal.style.display = "flex";
+}
+
+function openDevicesDetailModal() {
+  const modal = document.getElementById("modal-detail-devices");
+  const statsContainer = document.getElementById("device-cat-stats");
+  const tbody = document.getElementById("drilldown-devices-tbody");
+
+  if (!modal) return;
+
+  // Category counts
+  const catMap = {};
+  currentDevices.forEach(d => {
+    const c = d.category || "Other";
+    catMap[c] = (catMap[c] || 0) + 1;
+  });
+
+  if (statsContainer) {
+    statsContainer.innerHTML = "";
+    Object.keys(catMap).forEach(cat => {
+      const pill = document.createElement("div");
+      pill.className = "cat-stat-pill";
+      pill.innerHTML = `<span>${escapeHtml(cat)}</span> <span class="cat-stat-count">${catMap[cat]}</span>`;
+      statsContainer.appendChild(pill);
+    });
+  }
+
+  if (tbody) {
+    tbody.innerHTML = "";
+    if (currentDevices.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px; color:var(--text-muted);">No devices recorded in inventory.</td></tr>`;
+    } else {
+      currentDevices.forEach(dev => {
+        const tr = document.createElement("tr");
+        const scoreBadge = dev.score >= 80 ? "badge-low" : dev.score >= 50 ? "badge-medium" : "badge-critical";
+
+        tr.innerHTML = `
+          <td><span class="online-dot"></span></td>
+          <td><strong>${escapeHtml(dev.name)}</strong></td>
+          <td class="code-cell">${escapeHtml(dev.ip)}</td>
+          <td class="code-cell" style="color:#94a3b8;">${escapeHtml(dev.mac || "N/A")}</td>
+          <td><span class="badge badge-blue">${escapeHtml(dev.category || "IoT Device")}</span></td>
+          <td><span class="badge ${scoreBadge}">${dev.score}/100</span></td>
+          <td>
+            <button class="btn btn-secondary" style="padding:3px 8px; font-size:11px;" onclick="window.inspectDevice('${dev.id}')">Audit</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+  }
+
+  modal.style.display = "flex";
+}
+
+function openFlawsDetailModal() {
+  const modal = document.getElementById("modal-detail-flaws");
+  const container = document.getElementById("drilldown-flaws-container");
+
+  if (!modal) return;
+
+  if (container) {
+    container.innerHTML = "";
+
+    const allFlaws = [];
+    currentDevices.forEach(d => {
+      (d.flaws || []).forEach(f => {
+        allFlaws.push({
+          title: f,
+          deviceName: d.name,
+          deviceIp: d.ip,
+          score: d.score,
+          isCritical: f.toLowerCase().includes("xss") || f.toLowerCase().includes("rce") || f.toLowerCase().includes("telnet") || d.score < 50
+        });
+      });
+    });
+
+    if (allFlaws.length === 0) {
+      container.innerHTML = `
+        <div style="text-align:center; padding:32px; color:var(--text-muted);">
+          <div style="font-size:28px; margin-bottom:8px;">✓</div>
+          <strong>No Critical or High Security Flaws Detected!</strong>
+          <p style="font-size:12px; margin-top:4px;">All audited IoT endpoints meet current security posture baselines.</p>
+        </div>
+      `;
+    } else {
+      allFlaws.forEach(flaw => {
+        const card = document.createElement("div");
+        card.className = `drilldown-flaw-card ${flaw.isCritical ? "" : "warning-left"}`;
+
+        let impactDesc = "Security flaw compromising local perimeter authentication or input hygiene baseline.";
+        if (flaw.title.includes("XSS")) {
+          impactDesc = "Allows remote execution of arbitrary JavaScript, enabling session theft and unauthenticated device hijacking.";
+        } else if (flaw.title.includes("CSRF")) {
+          impactDesc = "Permits unauthorized third-party origins to trigger state changes (e.g. device reboot or configuration change).";
+        } else if (flaw.title.includes("Plaintext") || flaw.title.includes("HTTP")) {
+          impactDesc = "Cleartext transmission enables sniffing of credentials and session tokens over unencrypted Wi-Fi/LAN.";
+        } else if (flaw.title.includes("RTSP")) {
+          impactDesc = "Unauthenticated media stream port 554 exposes camera video feeds directly to the subnet.";
+        }
+
+        card.innerHTML = `
+          <div class="drilldown-flaw-top">
+            <span class="drilldown-flaw-title">${escapeHtml(flaw.title)}</span>
+            <span class="badge ${flaw.isCritical ? 'badge-critical' : 'badge-medium'}">${flaw.isCritical ? 'Critical' : 'High'}</span>
+          </div>
+          <div class="drilldown-flaw-device">Target Device: <strong>${escapeHtml(flaw.deviceName)}</strong> (${escapeHtml(flaw.deviceIp)})</div>
+          <div class="drilldown-flaw-impact">
+            <strong>Exploit Impact &amp; Defense:</strong> ${escapeHtml(impactDesc)}
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+  }
+
+  modal.style.display = "flex";
+}
+
+function openTransportDetailModal() {
+  const modal = document.getElementById("modal-detail-transport");
+  const statsContainer = document.getElementById("drilldown-transport-stats");
+  const tbody = document.getElementById("drilldown-transport-tbody");
+
+  if (!modal) return;
+
+  const total = currentDevices.length || 1;
+  const httpsCount = currentDevices.filter(d => d.headers?.https).length;
+  const hstsCount = currentDevices.filter(d => d.headers?.hsts).length;
+  const cspCount = currentDevices.filter(d => d.headers?.csp).length;
+  const xframeCount = currentDevices.filter(d => d.headers?.xframe).length;
+  const cookieCount = currentDevices.filter(d => d.headers?.secureCookies).length;
+
+  if (statsContainer) {
+    statsContainer.innerHTML = `
+      <div class="transport-stat-card">
+        <div class="transport-stat-label">HTTPS / TLS</div>
+        <div class="transport-stat-val ${httpsCount === total ? 'text-safe' : 'text-critical'}">${Math.round((httpsCount / total) * 100)}%</div>
+      </div>
+      <div class="transport-stat-card">
+        <div class="transport-stat-label">HSTS Enforced</div>
+        <div class="transport-stat-val ${hstsCount === total ? 'text-safe' : 'text-warning'}">${Math.round((hstsCount / total) * 100)}%</div>
+      </div>
+      <div class="transport-stat-card">
+        <div class="transport-stat-label">CSP Active</div>
+        <div class="transport-stat-val ${cspCount === total ? 'text-safe' : 'text-critical'}">${Math.round((cspCount / total) * 100)}%</div>
+      </div>
+      <div class="transport-stat-card">
+        <div class="transport-stat-label">Anti-Framing</div>
+        <div class="transport-stat-val ${xframeCount === total ? 'text-safe' : 'text-warning'}">${Math.round((xframeCount / total) * 100)}%</div>
+      </div>
+      <div class="transport-stat-card">
+        <div class="transport-stat-label">Secure Cookies</div>
+        <div class="transport-stat-val ${cookieCount === total ? 'text-safe' : 'text-warning'}">${Math.round((cookieCount / total) * 100)}%</div>
+      </div>
+    `;
+  }
+
+  if (tbody) {
+    tbody.innerHTML = "";
+    if (currentDevices.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px; color:var(--text-muted);">No devices to evaluate.</td></tr>`;
+    } else {
+      currentDevices.forEach(d => {
+        const tr = document.createElement("tr");
+        const h = d.headers || { https: false, hsts: false, csp: false, xframe: false, secureCookies: false };
+        const renderCheck = (val) => val 
+          ? `<span class="badge badge-low">✓ Pass</span>` 
+          : `<span class="badge badge-critical">✕ Fail</span>`;
+
+        tr.innerHTML = `
+          <td><strong>${escapeHtml(d.name)}</strong></td>
+          <td class="code-cell">${escapeHtml(d.ip)}</td>
+          <td>${renderCheck(h.https)}</td>
+          <td>${renderCheck(h.hsts)}</td>
+          <td>${renderCheck(h.csp)}</td>
+          <td>${renderCheck(h.xframe)}</td>
+          <td>${renderCheck(h.secureCookies)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+  }
+
+  modal.style.display = "flex";
+}
+
+function jumpToTab(tabName) {
+  const navItems = document.querySelectorAll(".nav-item");
+  const tabPanes = document.querySelectorAll(".tab-pane");
+  const tabTitle = document.getElementById("tab-title");
+
+  const titles = {
+    overview: "Network Security Overview & Posture",
+    devices: "Network Connected IoT Devices Inventory",
+    xai: "Explainable AI (SHAP) Vulnerability Decomposition",
+    headers: "Transport & Defensive Security Headers Matrix",
+    logs: "Real-Time Diagnostic & Audit Log Stream"
+  };
+
+  navItems.forEach(n => {
+    if (n.dataset.tab === tabName) n.classList.add("active");
+    else n.classList.remove("active");
+  });
+
+  tabPanes.forEach(p => {
+    if (p.id === `tab-${tabName}`) p.classList.add("active");
+    else p.classList.remove("active");
+  });
+
+  if (tabTitle) tabTitle.textContent = titles[tabName] || "Security Dashboard";
+}
+
 // Search & Actions Setup
 function setupEventListeners() {
   const searchInput = document.getElementById("device-search");
@@ -1102,6 +1442,12 @@ function setupEventListeners() {
       );
       renderDevicesTable(filtered);
     });
+  }
+
+  // Top Bar Run Audit button (Works across all 5 tabs)
+  const topAuditBtn = document.getElementById("btn-refresh-network");
+  if (topAuditBtn) {
+    topAuditBtn.addEventListener("click", runNetworkScan);
   }
 
   // Scan network button & Subnet Enter trigger
@@ -1132,6 +1478,76 @@ function setupEventListeners() {
       if (e.key === "Enter") {
         scanAndAddIp();
       }
+    });
+  }
+
+  // Interactive 4 Top Metric Cards Click Handlers (Overview Tab)
+  const cardScore = document.getElementById("card-metric-score");
+  if (cardScore) {
+    cardScore.addEventListener("click", openScoreDetailModal);
+  }
+
+  const cardDevices = document.getElementById("card-metric-devices");
+  if (cardDevices) {
+    cardDevices.addEventListener("click", openDevicesDetailModal);
+  }
+
+  const cardFlaws = document.getElementById("card-metric-flaws");
+  if (cardFlaws) {
+    cardFlaws.addEventListener("click", openFlawsDetailModal);
+  }
+
+  const cardTransport = document.getElementById("card-metric-transport");
+  if (cardTransport) {
+    cardTransport.addEventListener("click", openTransportDetailModal);
+  }
+
+  // Close Detail Modals
+  const setupModalCloser = (closeBtnId, doneBtnId, modalId) => {
+    const closeBtn = document.getElementById(closeBtnId);
+    const doneBtn = document.getElementById(doneBtnId);
+    const modal = document.getElementById(modalId);
+
+    if (closeBtn && modal) {
+      closeBtn.addEventListener("click", () => modal.style.display = "none");
+    }
+    if (doneBtn && modal) {
+      doneBtn.addEventListener("click", () => modal.style.display = "none");
+    }
+    if (modal) {
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) modal.style.display = "none";
+      });
+    }
+  };
+
+  setupModalCloser("btn-close-detail-score", "btn-done-detail-score", "modal-detail-score");
+  setupModalCloser("btn-close-detail-devices", "btn-done-detail-devices", "modal-detail-devices");
+  setupModalCloser("btn-close-detail-flaws", "btn-done-detail-flaws", "modal-detail-flaws");
+  setupModalCloser("btn-close-detail-transport", "btn-done-detail-transport", "modal-detail-transport");
+
+  // Tab jump triggers from modals
+  const jumpDevices = document.getElementById("btn-jump-devices-tab");
+  if (jumpDevices) {
+    jumpDevices.addEventListener("click", () => {
+      document.getElementById("modal-detail-devices").style.display = "none";
+      jumpToTab("devices");
+    });
+  }
+
+  const jumpXAI = document.getElementById("btn-jump-xai-tab");
+  if (jumpXAI) {
+    jumpXAI.addEventListener("click", () => {
+      document.getElementById("modal-detail-flaws").style.display = "none";
+      jumpToTab("xai");
+    });
+  }
+
+  const jumpHeaders = document.getElementById("btn-jump-headers-tab");
+  if (jumpHeaders) {
+    jumpHeaders.addEventListener("click", () => {
+      document.getElementById("modal-detail-transport").style.display = "none";
+      jumpToTab("headers");
     });
   }
 
@@ -1174,12 +1590,6 @@ function setupEventListeners() {
     });
   }
 
-  // Refresh Scan button in top bar
-  const refreshBtn = document.getElementById("btn-refresh-network");
-  if (refreshBtn) {
-    refreshBtn.addEventListener("click", runNetworkScan);
-  }
-
   // Modal buttons
   const closeModalBtn = document.getElementById("btn-close-modal");
   if (closeModalBtn) {
@@ -1203,7 +1613,7 @@ function setupEventListeners() {
         reAuditModalBtn.innerHTML = "<span>🔄</span> Running 5-Stage Audit...";
         await openAuditModal(activeAuditingDevice);
         reAuditModalBtn.disabled = false;
-        reAuditModalBtn.innerHTML = "<span>🔄</span> Re-Audit (All 5 Stages)";
+        reAuditModalBtn.innerHTML = "<span>🛡️</span> Run Audit (All 5 Stages)";
       }
     });
   }

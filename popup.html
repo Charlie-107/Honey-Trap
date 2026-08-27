@@ -109,9 +109,20 @@
 
   <!-- Controls & Export Actions -->
   <footer class="app-footer">
+    <!-- Inline Audit Progress Indicator -->
+    <div id="popup-scan-progress" class="popup-progress-container" style="display: none;">
+      <div class="popup-progress-track">
+        <div id="popup-progress-fill" class="popup-progress-fill" style="width: 0%;"></div>
+      </div>
+      <div class="popup-progress-meta">
+        <span id="popup-progress-status" class="popup-progress-status">Auditing DOM & Headers...</span>
+        <span id="popup-progress-percent" class="popup-progress-percent">0%</span>
+      </div>
+    </div>
+
     <div class="btn-group">
-      <button class="btn btn-primary" id="btn-run-audit">
-        <span>↻</span> Run Audit
+      <button class="btn btn-primary btn-run-audit" id="btn-run-audit">
+        <span id="btn-audit-icon">🛡️</span> Run Audit
       </button>
       <button class="btn btn-secondary" id="btn-export-report">
         <span>⤓</span> Export Report

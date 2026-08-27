@@ -55,21 +55,41 @@
         <p class="page-subtitle">Real-time passive diagnostic and Explainable AI analysis of local IoT infrastructure.</p>
       </div>
       <div class="top-actions">
-        <button class="btn btn-secondary" id="btn-refresh-network">
-          <span>🔄</span> Refresh Scan
+        <button class="btn btn-primary btn-run-audit-top" id="btn-refresh-network" title="Execute comprehensive 5-stage network audit">
+          <span class="audit-icon-spin" id="top-audit-icon">🛡️</span>
+          <span id="top-audit-btn-text">Run Audit</span>
         </button>
-        <button class="btn btn-primary" id="btn-export-full-report">
+        <button class="btn btn-secondary" id="btn-export-full-report">
           <span>⤓</span> Export Audit Dossier
         </button>
       </div>
     </header>
 
+    <!-- Global Prominent Run Audit Progress Bar (Active across all 5 tabs) -->
+    <div id="dash-global-progress" class="global-audit-progress" style="display: none;">
+      <div class="global-progress-inner">
+        <div class="global-progress-text-row">
+          <div class="global-status-wrap">
+            <span class="pulse-audit-indicator"></span>
+            <strong id="global-audit-status">Executing NIST &amp; OWASP 5-Stage Security Audit...</strong>
+          </div>
+          <span id="global-audit-percent" class="global-audit-percent">0%</span>
+        </div>
+        <div class="global-progress-track">
+          <div id="global-progress-fill" class="global-progress-fill" style="width: 0%;"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- Tab 1: Overview & Posture -->
     <section id="tab-overview" class="tab-pane active">
-      <!-- High-Level Metric Cards -->
+      <!-- High-Level Interactive Metric Cards -->
       <div class="metrics-grid">
-        <div class="metric-card metric-score-card">
-          <span class="metric-label">Network Risk Score</span>
+        <div class="metric-card metric-score-card card-interactive" id="card-metric-score" title="Click for Detailed Network Risk Score Breakdown">
+          <div class="metric-card-top-row">
+            <span class="metric-label">Network Risk Score</span>
+            <span class="card-drilldown-hint">Details ↗</span>
+          </div>
           <div class="metric-score-flex">
             <div class="dash-circle-wrap">
               <svg class="dash-ring-svg" viewBox="0 0 76 76">
@@ -83,36 +103,45 @@
             </div>
             <div class="dash-score-meta">
               <span class="metric-sub text-critical" id="metric-score-status">⚠️ High Risk Posture</span>
-              <span class="dash-score-hint">Remediation required</span>
+              <span class="dash-score-hint">Click for scoring rubric</span>
             </div>
           </div>
         </div>
 
-        <div class="metric-card">
-          <span class="metric-label">Audited IoT Devices</span>
+        <div class="metric-card card-interactive" id="card-metric-devices" title="Click for Connected IoT Devices Roster">
+          <div class="metric-card-top-row">
+            <span class="metric-label">Audited IoT Devices</span>
+            <span class="card-drilldown-hint">Details ↗</span>
+          </div>
           <div class="metric-val-row">
             <span class="metric-val" id="metric-device-count">7</span>
             <span class="metric-unit">Active</span>
           </div>
-          <span class="metric-sub text-warning">4 devices require hardening</span>
+          <span class="metric-sub text-warning" id="metric-devices-sub">Click to inspect device inventory</span>
         </div>
 
-        <div class="metric-card">
-          <span class="metric-label">Critical / High Flaws</span>
+        <div class="metric-card card-interactive" id="card-metric-flaws" title="Click for Critical & High Vulnerabilities Breakdown">
+          <div class="metric-card-top-row">
+            <span class="metric-label">Critical / High Flaws</span>
+            <span class="card-drilldown-hint">Details ↗</span>
+          </div>
           <div class="metric-val-row">
             <span class="metric-val text-critical" id="metric-flaw-count">5</span>
             <span class="metric-unit">Vulnerabilities</span>
           </div>
-          <span class="metric-sub">DOM XSS & Missing CSRF</span>
+          <span class="metric-sub" id="metric-flaws-sub">DOM XSS &amp; Missing CSRF</span>
         </div>
 
-        <div class="metric-card">
-          <span class="metric-label">Transport Defense</span>
+        <div class="metric-card card-interactive" id="card-metric-transport" title="Click for Transport & Defensive Headers Matrix">
+          <div class="metric-card-top-row">
+            <span class="metric-label">Transport Defense</span>
+            <span class="card-drilldown-hint">Details ↗</span>
+          </div>
           <div class="metric-val-row">
-            <span class="metric-val text-warning">28%</span>
+            <span class="metric-val text-warning" id="metric-transport-pct">28%</span>
             <span class="metric-unit">Enforced</span>
           </div>
-          <span class="metric-sub text-critical">5/7 devices lack HTTPS/CSP</span>
+          <span class="metric-sub text-critical" id="metric-transport-sub">Click for compliance details</span>
         </div>
       </div>
 
@@ -533,6 +562,203 @@
       <div class="modal-footer">
         <span style="font-size:12px; color:var(--text-muted);">Verified against NIST SP 800-213 &amp; OWASP IoT standard auditing guidelines.</span>
         <button class="btn btn-secondary" id="btn-cancel-dash-export">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1. Detail Modal: Network Risk Score Breakdown -->
+  <div id="modal-detail-score" class="modal-overlay" style="display: none;">
+    <div class="modal-card modal-detail-card">
+      <div class="modal-header">
+        <div class="modal-header-left">
+          <span class="modal-icon">🛡️</span>
+          <div>
+            <h2 class="modal-title">Network Risk Score &amp; Posture Breakdown</h2>
+            <p class="modal-sub">Diagnostic quantification based on NIST SP 800-213 &amp; OWASP IoT Top 10 Scoring Rubric</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="btn-close-detail-score">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="drilldown-summary-box">
+          <div class="drilldown-score-col">
+            <div class="dash-circle-wrap large">
+              <svg class="dash-ring-svg" viewBox="0 0 76 76">
+                <circle class="dash-ring-bg" cx="38" cy="38" r="32" />
+                <circle class="dash-ring-fill" id="drilldown-score-ring" cx="38" cy="38" r="32" />
+              </svg>
+              <div class="dash-circle-center">
+                <span class="metric-val text-critical" id="drilldown-score-val">48</span>
+                <span class="metric-max">/100</span>
+              </div>
+            </div>
+            <div style="text-align:center; margin-top:8px;">
+              <strong id="drilldown-score-posture" class="text-critical">High Risk Posture</strong>
+              <div style="font-size:11px; color:var(--text-muted);">Network Average</div>
+            </div>
+          </div>
+
+          <div class="drilldown-rubric-col">
+            <h4 style="font-size:13px; color:#fff; margin-bottom:8px;">Scoring Deduction Weights</h4>
+            <div class="rubric-items-grid">
+              <div class="rubric-item">
+                <span class="rubric-name">Plaintext HTTP (No TLS 443)</span>
+                <span class="rubric-deduct">-25 pts / host</span>
+              </div>
+              <div class="rubric-item">
+                <span class="rubric-name">Missing Content-Security-Policy (CSP)</span>
+                <span class="rubric-deduct">-15 pts / host</span>
+              </div>
+              <div class="rubric-item">
+                <span class="rubric-name">Missing X-Frame-Options (Clickjacking)</span>
+                <span class="rubric-deduct">-10 pts / host</span>
+              </div>
+              <div class="rubric-item">
+                <span class="rubric-name">Insecure Session Cookie Flags</span>
+                <span class="rubric-deduct">-10 pts / host</span>
+              </div>
+              <div class="rubric-item">
+                <span class="rubric-name">Critical Vulnerability (DOM XSS / RCE)</span>
+                <span class="rubric-deduct">-20 pts / flaw</span>
+              </div>
+              <div class="rubric-item">
+                <span class="rubric-name">High Flaw (Missing CSRF Nonce)</span>
+                <span class="rubric-deduct">-10 pts / flaw</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h4 style="font-size:13px; color:#fff; margin: 18px 0 8px 0;">Per-Device Hardening Posture Distribution</h4>
+        <div id="drilldown-device-scores-list" class="drilldown-scores-list">
+          <!-- Dynamically populated via dashboard.js -->
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btn-done-detail-score">Close</button>
+        <button class="btn btn-primary" onclick="runNetworkScan()"><span>⚡</span> Run Re-Audit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Detail Modal: Audited IoT Devices Roster -->
+  <div id="modal-detail-devices" class="modal-overlay" style="display: none;">
+    <div class="modal-card modal-detail-card">
+      <div class="modal-header">
+        <div class="modal-header-left">
+          <span class="modal-icon">📡</span>
+          <div>
+            <h2 class="modal-title">Monitored Connected IoT Devices Roster</h2>
+            <p class="modal-sub">Detailed breakdown of active endpoint nodes, hardware MAC OUIs, and listening services</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="btn-close-detail-devices">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="device-cat-stats-row" id="device-cat-stats">
+          <!-- Dynamic category pills -->
+        </div>
+
+        <div class="drilldown-table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Device Name</th>
+                <th>IP Address</th>
+                <th>MAC / Vendor</th>
+                <th>Category</th>
+                <th>Score</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="drilldown-devices-tbody">
+              <!-- Dynamically populated via dashboard.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btn-done-detail-devices">Close</button>
+        <button class="btn btn-primary" id="btn-jump-devices-tab">View Full Devices Tab ↗</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Detail Modal: Critical / High Flaws Breakdown -->
+  <div id="modal-detail-flaws" class="modal-overlay" style="display: none;">
+    <div class="modal-card modal-detail-card">
+      <div class="modal-header">
+        <div class="modal-header-left">
+          <span class="modal-icon">⚠️</span>
+          <div>
+            <h2 class="modal-title">Identified Critical &amp; High Vulnerabilities Dossier</h2>
+            <p class="modal-sub">Comprehensive list of detected exploits, DOM sinks, and missing anti-forgery protections</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="btn-close-detail-flaws">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div id="drilldown-flaws-container" class="drilldown-flaws-list">
+          <!-- Dynamically populated via dashboard.js -->
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btn-done-detail-flaws">Close</button>
+        <button class="btn btn-primary" id="btn-jump-xai-tab">Inspect XAI SHAP Weights ↗</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Detail Modal: Transport Defense Compliance Matrix -->
+  <div id="modal-detail-transport" class="modal-overlay" style="display: none;">
+    <div class="modal-card modal-detail-card">
+      <div class="modal-header">
+        <div class="modal-header-left">
+          <span class="modal-icon">🔒</span>
+          <div>
+            <h2 class="modal-title">Transport Security &amp; Defensive Headers Compliance</h2>
+            <p class="modal-sub">Standard defense-in-depth header evaluation across all network endpoints</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="btn-close-detail-transport">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="transport-stats-grid" id="drilldown-transport-stats">
+          <!-- Dynamic stats -->
+        </div>
+
+        <h4 style="font-size:13px; color:#fff; margin: 16px 0 8px 0;">Per-Device Header Compliance</h4>
+        <div class="drilldown-table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Device</th>
+                <th>IP Address</th>
+                <th>HTTPS</th>
+                <th>HSTS</th>
+                <th>CSP</th>
+                <th>X-Frame</th>
+                <th>Cookies</th>
+              </tr>
+            </thead>
+            <tbody id="drilldown-transport-tbody">
+              <!-- Dynamic rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btn-done-detail-transport">Close</button>
+        <button class="btn btn-primary" id="btn-jump-headers-tab">View Headers Tab ↗</button>
       </div>
     </div>
   </div>
