@@ -292,15 +292,19 @@
             <div class="form-group flex-2">
               <label for="scanner-mode" class="form-label">Scan Strategy</label>
               <select id="scanner-mode" class="form-input form-select">
-                <option value="auto">Rust Fast Socket & ARP Discovery (Recommended)</option>
+                <option value="auto">Rust Fast Socket &amp; ARP Discovery (Recommended)</option>
                 <option value="nmap">Rust Nmap Engine (-sT Deep Ports Scan)</option>
                 <option value="browser">In-Browser HTTP/Port Probe (Fallback)</option>
               </select>
             </div>
-            <div class="form-group flex-1 form-btn-group">
-              <button class="btn btn-primary btn-scan" id="btn-scan-network">
-                <span id="scan-btn-icon">⚡</span>
-                <span id="scan-btn-text">Scan Network</span>
+            <div class="form-group flex-2 form-btn-group-dual">
+              <button class="btn btn-secondary btn-scan btn-scan-endpoints" id="btn-scan-endpoints" title="Scan local network to discover connected devices and endpoints">
+                <span id="endpoint-btn-icon">📡</span>
+                <span id="endpoint-btn-text">Scan for Endpoints</span>
+              </button>
+              <button class="btn btn-primary btn-scan btn-tab-audit" id="btn-scan-network" title="Execute comprehensive 5-stage vulnerability audit on discovered devices">
+                <span id="scan-btn-icon">🛡️</span>
+                <span id="scan-btn-text">Run Audit</span>
               </button>
             </div>
           </div>

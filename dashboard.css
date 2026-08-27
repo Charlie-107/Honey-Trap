@@ -679,6 +679,32 @@ body {
   align-items: flex-end;
 }
 
+.form-btn-group-dual {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-scan-endpoints {
+  background: var(--bg-secondary);
+  border: 1px solid var(--accent-blue);
+  color: var(--accent-blue);
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.btn-scan-endpoints:hover {
+  background: rgba(56, 189, 248, 0.15);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+}
+
+.btn-tab-audit {
+  background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
+  color: #0f172a;
+  font-weight: 700;
+}
+
 .btn-scan {
   height: 38px;
   white-space: nowrap;

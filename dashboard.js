@@ -971,7 +971,106 @@ async function runNetworkScan() {
   }
 }
 
-// Add / Search Single IP Execution
+// Scan for Endpoints (Dedicated Local Subnet Device Discovery)
+async function scanForEndpoints() {
+  const subnetInput = document.getElementById("scanner-subnet");
+  let subnet = (subnetInput ? subnetInput.value.trim() : "") || "192.168.1.0/24";
+
+  // Normalize single IP to subnet if entered without CIDR
+  if (!subnet.includes("/")) {
+    const parts = subnet.split(".");
+    if (parts.length === 4) {
+      subnet = `${parts[0]}.${parts[1]}.${parts[2]}.0/24`;
+      if (subnetInput) subnetInput.value = subnet;
+    }
+  }
+
+  const mode = document.getElementById("scanner-mode")?.value || "rust";
+  const btn = document.getElementById("btn-scan-endpoints");
+  const btnText = document.getElementById("endpoint-btn-text");
+  const btnIcon = document.getElementById("endpoint-btn-icon");
+
+  const progressBox = document.getElementById("scan-progress-container");
+  const progressFill = document.getElementById("scan-progress-fill");
+  const statusText = document.getElementById("scan-status-text");
+  const percentText = document.getElementById("scan-percent-text");
+
+  if (btn) {
+    btn.classList.add("loading");
+    btn.disabled = true;
+  }
+  if (btnText) btnText.textContent = "Scanning Endpoints...";
+  if (btnIcon) btnIcon.className = "spin";
+
+  if (progressBox) progressBox.style.display = "block";
+  if (progressFill) progressFill.style.width = "20%";
+  if (percentText) percentText.textContent = "20%";
+  if (statusText) statusText.textContent = `Probing local ARP cache and active endpoints on ${subnet}...`;
+
+  addAuditLog("INFO", `Scanning for connected network endpoints on subnet ${subnet}...`);
+
+  try {
+    let discovered = null;
+
+    // 1. Try Rust Scanner endpoint discovery
+    try {
+      if (progressFill) progressFill.style.width = "50%";
+      if (percentText) percentText.textContent = "50%";
+      if (statusText) statusText.textContent = `Querying Rust ARP & Socket sweep daemon on http://127.0.0.1:5000...`;
+
+      const response = await fetch(`${RUST_BACKEND_URL}/api/scan`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subnet: subnet, mode: mode }),
+        signal: AbortSignal.timeout(12000)
+      });
+
+      if (response.ok) {
+        discovered = await response.json();
+      }
+    } catch (e) {
+      console.log("Rust scanner unavailable, utilizing in-browser endpoint probe fallback", e);
+    }
+
+    // 2. Client-side heuristic fallback
+    if (!discovered || discovered.length === 0) {
+      if (statusText) statusText.textContent = `Probing target hosts across ${subnet} in-browser...`;
+      if (progressFill) progressFill.style.width = "75%";
+      if (percentText) percentText.textContent = "75%";
+      await new Promise(r => setTimeout(r, 600));
+      discovered = await performBrowserFallbackScan(subnet);
+    }
+
+    if (progressFill) progressFill.style.width = "100%";
+    if (percentText) percentText.textContent = "100%";
+    if (statusText) statusText.textContent = `✓ Discovered ${discovered.length} active endpoints on ${subnet}.`;
+
+    // Persist discovered devices persistently to storage
+    currentDevices = discovered;
+    saveDevicesToStorage(currentDevices);
+    renderDevicesTable(currentDevices);
+    renderHeadersTable(currentDevices);
+    updateOverviewMetrics(currentDevices);
+
+    addAuditLog("INFO", `Endpoint discovery complete. Discovered and registered ${discovered.length} live IoT nodes on ${subnet}.`);
+
+    setTimeout(() => {
+      if (progressBox) progressBox.style.display = "none";
+      if (progressFill) progressFill.style.width = "0%";
+    }, 2800);
+
+  } catch (err) {
+    if (statusText) statusText.textContent = `Endpoint scan failed: ${err.message}`;
+    addAuditLog("CRIT", `Endpoint scan error: ${err.message}`);
+  } finally {
+    if (btn) {
+      btn.classList.remove("loading");
+      btn.disabled = false;
+    }
+    if (btnText) btnText.textContent = "Scan for Endpoints";
+    if (btnIcon) btnIcon.className = "";
+  }
+}
 async function scanAndAddIp() {
   const ipInput = document.getElementById("add-device-ip");
   const nameInput = document.getElementById("add-device-name");
@@ -1450,7 +1549,13 @@ function setupEventListeners() {
     topAuditBtn.addEventListener("click", runNetworkScan);
   }
 
-  // Scan network button & Subnet Enter trigger
+  // Scan for Endpoints button (Dedicated network device discovery)
+  const endpointsBtn = document.getElementById("btn-scan-endpoints");
+  if (endpointsBtn) {
+    endpointsBtn.addEventListener("click", scanForEndpoints);
+  }
+
+  // Tab 2 Run Audit button
   const scanBtn = document.getElementById("btn-scan-network");
   if (scanBtn) {
     scanBtn.addEventListener("click", runNetworkScan);
@@ -1460,7 +1565,7 @@ function setupEventListeners() {
   if (subnetInput) {
     subnetInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
-        runNetworkScan();
+        scanForEndpoints();
       }
     });
   }
