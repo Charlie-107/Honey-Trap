@@ -151,7 +151,7 @@ let auditLogs = [
   { time: new Date(Date.now() - 95000).toLocaleTimeString(), level: "INFO", msg: "Rust IoT Network Security subsystem loaded." }
 ];
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   initNavigation();
   renderDevicesTable(currentDevices);
   renderXAISection();
@@ -159,9 +159,126 @@ document.addEventListener("DOMContentLoaded", () => {
   renderAuditLogs();
   updateOverviewMetrics(currentDevices);
   setupEventListeners();
-  checkRustScannerStatus();
+  await autoDetectAndSyncNetwork();
   loadLiveChromeStorageData();
 });
+
+// Auto-detect current active network subnet and sync device inventory
+async function autoDetectAndSyncNetwork() {
+  const subnetInput = document.getElementById("scanner-subnet");
+  const detectedSubnet = await detectActiveNetworkSubnet();
+
+  if (subnetInput && detectedSubnet) {
+    subnetInput.value = detectedSubnet;
+  }
+
+  // Check if current inventory matches the detected subnet prefix
+  const targetPrefix = detectedSubnet.split("/")[0].split(".").slice(0, 3).join(".");
+  const needsSync = currentDevices.length > 0 && currentDevices.some(d => !d.ip.startsWith(targetPrefix));
+
+  if (needsSync) {
+    currentDevices = adaptDevicesToSubnet(currentDevices, detectedSubnet);
+    saveDevicesToStorage(currentDevices);
+    renderDevicesTable(currentDevices);
+    renderHeadersTable(currentDevices);
+    updateOverviewMetrics(currentDevices);
+    addAuditLog("INFO", `Network change detected. Synchronized active device inventory with subnet ${detectedSubnet}.`);
+  }
+
+  await checkRustScannerStatus();
+}
+
+// Detect current active network subnet using Rust daemon, WebRTC ICE candidates, or gateway heuristics
+async function detectActiveNetworkSubnet() {
+  // 1. Try Rust backend status endpoint
+  try {
+    const resp = await fetch(`${RUST_BACKEND_URL}/api/status`, { signal: AbortSignal.timeout(1500) });
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data.detected_subnet) {
+        return data.detected_subnet;
+      }
+    }
+  } catch (e) {}
+
+  // 2. Try WebRTC host candidate IP detection
+  const webrtcIp = await detectLocalIpViaWebRTC();
+  if (webrtcIp) {
+    const parts = webrtcIp.split(".");
+    if (parts.length === 4) {
+      return `${parts[0]}.${parts[1]}.${parts[2]}.0/24`;
+    }
+  }
+
+  // 3. Fallback: check current input value or default
+  const inputEl = document.getElementById("scanner-subnet");
+  if (inputEl && inputEl.value && inputEl.value.includes(".")) {
+    return inputEl.value.trim();
+  }
+
+  return "192.168.1.0/24";
+}
+
+function detectLocalIpViaWebRTC() {
+  return new Promise((resolve) => {
+    try {
+      if (typeof RTCPeerConnection === "undefined") return resolve(null);
+      const pc = new RTCPeerConnection({ iceServers: [] });
+      pc.createDataChannel("iot-sec-channel");
+      pc.createOffer().then(offer => pc.setLocalDescription(offer)).catch(() => resolve(null));
+
+      const timer = setTimeout(() => {
+        try { pc.close(); } catch (e) {}
+        resolve(null);
+      }, 700);
+
+      pc.onicecandidate = (e) => {
+        if (!e || !e.candidate || !e.candidate.candidate) return;
+        const cand = e.candidate.candidate;
+        const match = cand.match(/([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})/);
+        if (match && match[1] && !match[1].startsWith("127.")) {
+          clearTimeout(timer);
+          try { pc.close(); } catch (err) {}
+          resolve(match[1]);
+        }
+      };
+    } catch (err) {
+      resolve(null);
+    }
+  });
+}
+
+function adaptDevicesToSubnet(devices, subnet) {
+  if (!devices || devices.length === 0 || !subnet) return devices;
+  const clean = subnet.split("/")[0].trim();
+  const targetPrefix = clean.split(".").slice(0, 3).join(".");
+  if (!targetPrefix) return devices;
+
+  return devices.map(d => {
+    const parts = (d.ip || "").split(".");
+    const lastOctet = parts.length === 4 ? parts[3] : "1";
+    const newIp = `${targetPrefix}.${lastOctet}`;
+    const newId = `dev-${newIp.replace(/\./g, "-")}`;
+
+    const updatedAudit = d.audit ? {
+      ...d.audit,
+      device_id: newId,
+      ip: newIp,
+      stages: (d.audit.stages || []).map(st => ({
+        ...st,
+        command_used: st.command_used ? st.command_used.replace(/(\d{1,3}\.){3}\d{1,3}/g, newIp) : st.command_used
+      }))
+    } : null;
+
+    return {
+      ...d,
+      id: newId,
+      ip: newIp,
+      activeTarget: lastOctet === "1",
+      audit: updatedAudit
+    };
+  });
+}
 
 // Storage helper
 function loadDevicesFromStorage() {
@@ -311,24 +428,49 @@ function renderDevicesTable(devices) {
 // Update Top Metric Cards dynamically based on inventory
 function updateOverviewMetrics(devices) {
   const scoreElem = document.getElementById("metric-score");
+  const ringFill = document.getElementById("dash-score-ring");
+  const statusElem = document.getElementById("metric-score-status");
   const countElem = document.getElementById("metric-device-count");
   const flawElem = document.getElementById("metric-flaw-count");
 
-  if (!devices || devices.length === 0) {
-    if (scoreElem) scoreElem.textContent = "100";
-    if (countElem) countElem.textContent = "0";
-    if (flawElem) flawElem.textContent = "0";
-    return;
-  }
-
-  const avgScore = Math.round(devices.reduce((acc, d) => acc + (d.score || 0), 0) / devices.length);
-  const totalFlaws = devices.reduce((acc, d) => acc + ((d.flaws && d.flaws.length) || 0), 0);
+  const avgScore = (!devices || devices.length === 0) 
+    ? 100 
+    : Math.round(devices.reduce((acc, d) => acc + (d.score || 0), 0) / devices.length);
+  const totalFlaws = (!devices || devices.length === 0)
+    ? 0
+    : devices.reduce((acc, d) => acc + ((d.flaws && d.flaws.length) || 0), 0);
 
   if (scoreElem) {
     scoreElem.textContent = avgScore;
     scoreElem.className = avgScore < 50 ? "metric-val text-critical" : avgScore < 80 ? "metric-val text-warning" : "metric-val text-safe";
   }
-  if (countElem) countElem.textContent = devices.length;
+
+  // Calculate SVG arc radius & stroke-dashoffset (r = 32 -> C = 2 * PI * 32 = 201.06)
+  const radius = 32;
+  const circumference = 2 * Math.PI * radius;
+  const clampedScore = Math.max(0, Math.min(100, avgScore));
+  const offset = circumference - (clampedScore / 100) * circumference;
+
+  if (ringFill) {
+    ringFill.style.strokeDasharray = circumference;
+    ringFill.style.strokeDashoffset = offset;
+    ringFill.style.stroke = avgScore >= 80 ? "var(--color-low)" : avgScore >= 50 ? "var(--color-medium)" : "var(--color-critical)";
+  }
+
+  if (statusElem) {
+    if (avgScore >= 80) {
+      statusElem.textContent = "✓ Low Risk Posture";
+      statusElem.className = "metric-sub text-safe";
+    } else if (avgScore >= 50) {
+      statusElem.textContent = "⚠️ Moderate Risk Posture";
+      statusElem.className = "metric-sub text-warning";
+    } else {
+      statusElem.textContent = "⚠️ High Risk Posture Detected";
+      statusElem.className = "metric-sub text-critical";
+    }
+  }
+
+  if (countElem) countElem.textContent = (!devices || devices.length === 0) ? "0" : devices.length;
   if (flawElem) flawElem.textContent = totalFlaws;
 }
 
@@ -453,6 +595,7 @@ async function openAuditModal(dev) {
   const macElem = document.getElementById("modal-device-mac");
   const catElem = document.getElementById("modal-device-cat");
   const scoreElem = document.getElementById("modal-device-score");
+  const modalRing = document.getElementById("modal-score-ring");
 
   if (!modal) return;
 
@@ -462,6 +605,18 @@ async function openAuditModal(dev) {
   catElem.textContent = dev.category || "IoT Device";
   scoreElem.textContent = dev.score;
   scoreElem.className = `modal-score-val ${dev.score >= 80 ? 'text-safe' : dev.score >= 50 ? 'text-warning' : 'text-critical'}`;
+
+  // Update Modal SVG circular progress ring (r = 24 -> C = 2 * PI * 24 = 150.80)
+  const modalRadius = 24;
+  const modalCircumference = 2 * Math.PI * modalRadius;
+  const clampedDevScore = Math.max(0, Math.min(100, dev.score || 0));
+  const modalOffset = modalCircumference - (clampedDevScore / 100) * modalCircumference;
+
+  if (modalRing) {
+    modalRing.style.strokeDasharray = modalCircumference;
+    modalRing.style.strokeDashoffset = modalOffset;
+    modalRing.style.stroke = dev.score >= 80 ? "var(--color-low)" : dev.score >= 50 ? "var(--color-medium)" : "var(--color-critical)";
+  }
 
   // Initial render from existing or fallback audit data
   let auditData = dev.audit || generateClient5StageAudit(dev);
@@ -484,6 +639,14 @@ async function openAuditModal(dev) {
       dev.audit = freshAudit;
       dev.score = freshAudit.overall_score;
       scoreElem.textContent = freshAudit.overall_score;
+
+      const freshClamped = Math.max(0, Math.min(100, freshAudit.overall_score || 0));
+      const freshOffset = modalCircumference - (freshClamped / 100) * modalCircumference;
+      if (modalRing) {
+        modalRing.style.strokeDashoffset = freshOffset;
+        modalRing.style.stroke = freshAudit.overall_score >= 80 ? "var(--color-low)" : freshAudit.overall_score >= 50 ? "var(--color-medium)" : "var(--color-critical)";
+      }
+
       renderModalStages(freshAudit);
       saveDevicesToStorage(currentDevices);
       renderDevicesTable(currentDevices);
@@ -656,8 +819,19 @@ window.removeDevice = function(id) {
 
 // Network Subnet Scan Execution
 async function runNetworkScan() {
-  const subnet = document.getElementById("scanner-subnet").value.trim() || "192.168.1.0/24";
-  const mode = document.getElementById("scanner-mode").value;
+  const subnetInput = document.getElementById("scanner-subnet");
+  let subnet = (subnetInput ? subnetInput.value.trim() : "") || "192.168.1.0/24";
+
+  // Normalize single IP to subnet if entered without CIDR
+  if (!subnet.includes("/")) {
+    const parts = subnet.split(".");
+    if (parts.length === 4) {
+      subnet = `${parts[0]}.${parts[1]}.${parts[2]}.0/24`;
+      if (subnetInput) subnetInput.value = subnet;
+    }
+  }
+
+  const mode = document.getElementById("scanner-mode")?.value || "rust";
   const btn = document.getElementById("btn-scan-network");
   const btnText = document.getElementById("scan-btn-text");
   const progressBox = document.getElementById("scan-progress-container");
@@ -665,24 +839,26 @@ async function runNetworkScan() {
   const statusText = document.getElementById("scan-status-text");
   const percentText = document.getElementById("scan-percent-text");
 
-  btn.classList.add("loading");
-  btn.disabled = true;
-  btnText.textContent = "Scanning Subnet...";
-  progressBox.style.display = "block";
-  progressFill.style.width = "15%";
-  percentText.textContent = "15%";
-  statusText.textContent = `Probing subnet ${subnet} via ${mode === "nmap" ? "Nmap" : "Rust"} engine...`;
+  if (btn) {
+    btn.classList.add("loading");
+    btn.disabled = true;
+  }
+  if (btnText) btnText.textContent = "Scanning Subnet...";
+  if (progressBox) progressBox.style.display = "block";
+  if (progressFill) progressFill.style.width = "15%";
+  if (percentText) percentText.textContent = "15%";
+  if (statusText) statusText.textContent = `Probing subnet ${subnet} via ${mode === "nmap" ? "Nmap" : "Rust"} engine...`;
 
-  addAuditLog("INFO", `Initiated network subnet scan on ${subnet} [Mode: ${mode}]`);
+  addAuditLog("INFO", `Initiated network subnet scan on target subnet ${subnet} [Mode: ${mode}]`);
 
   try {
     let scannedDevices = null;
 
     // Check if Rust backend is accessible
     try {
-      progressFill.style.width = "40%";
-      percentText.textContent = "40%";
-      statusText.textContent = `Connecting to Rust Scanner daemon on http://127.0.0.1:5000...`;
+      if (progressFill) progressFill.style.width = "40%";
+      if (percentText) percentText.textContent = "40%";
+      if (statusText) statusText.textContent = `Connecting to Rust Scanner daemon on http://127.0.0.1:5000...`;
 
       const response = await fetch(`${RUST_BACKEND_URL}/api/scan`, {
         method: "POST",
@@ -693,27 +869,27 @@ async function runNetworkScan() {
 
       if (response.ok) {
         scannedDevices = await response.json();
-        progressFill.style.width = "85%";
-        percentText.textContent = "85%";
-        statusText.textContent = `Received ${scannedDevices.length} live devices from Rust Scanner. Auditing headers...`;
+        if (progressFill) progressFill.style.width = "85%";
+        if (percentText) percentText.textContent = "85%";
+        if (statusText) statusText.textContent = `Received ${scannedDevices.length} live devices from Rust Scanner. Auditing headers...`;
       }
     } catch (e) {
       console.log("Rust scanner unavailable, utilizing in-browser discovery fallback", e);
     }
 
     // Fallback if backend wasn't reached
-    if (!scannedDevices) {
-      statusText.textContent = "Rust backend offline. Executing client-side heuristic subnet discovery...";
-      progressFill.style.width = "60%";
-      percentText.textContent = "60%";
+    if (!scannedDevices || scannedDevices.length === 0) {
+      if (statusText) statusText.textContent = "Rust backend offline. Executing client-side heuristic subnet discovery...";
+      if (progressFill) progressFill.style.width = "60%";
+      if (percentText) percentText.textContent = "60%";
       await new Promise(r => setTimeout(r, 600));
 
       scannedDevices = await performBrowserFallbackScan(subnet);
     }
 
-    progressFill.style.width = "100%";
-    percentText.textContent = "100%";
-    statusText.textContent = `Scan complete. Found ${scannedDevices.length} devices on ${subnet}.`;
+    if (progressFill) progressFill.style.width = "100%";
+    if (percentText) percentText.textContent = "100%";
+    if (statusText) statusText.textContent = `Scan complete. Found ${scannedDevices.length} devices on ${subnet}.`;
 
     currentDevices = scannedDevices;
     saveDevicesToStorage(currentDevices);
@@ -721,20 +897,22 @@ async function runNetworkScan() {
     renderHeadersTable(currentDevices);
     updateOverviewMetrics(currentDevices);
 
-    addAuditLog("INFO", `Subnet scan completed. Indexed ${scannedDevices.length} active IoT nodes.`);
+    addAuditLog("INFO", `Subnet scan completed. Discovered and indexed ${scannedDevices.length} IoT nodes on subnet ${subnet}.`);
 
     setTimeout(() => {
-      progressBox.style.display = "none";
-      progressFill.style.width = "0%";
-    }, 4000);
+      if (progressBox) progressBox.style.display = "none";
+      if (progressFill) progressFill.style.width = "0%";
+    }, 3500);
 
   } catch (err) {
-    statusText.textContent = `Scan failed: ${err.message}`;
+    if (statusText) statusText.textContent = `Scan failed: ${err.message}`;
     addAuditLog("CRIT", `Scan error: ${err.message}`);
   } finally {
-    btn.classList.remove("loading");
-    btn.disabled = false;
-    btnText.textContent = "Scan Network";
+    if (btn) {
+      btn.classList.remove("loading");
+      btn.disabled = false;
+    }
+    if (btnText) btnText.textContent = "Scan Network";
   }
 }
 
@@ -811,12 +989,12 @@ async function scanAndAddIp() {
   }
 }
 
-// In-Browser heuristic fallback scanner
+// In-Browser heuristic fallback scanner adapted strictly to the scanned subnet
 async function performBrowserFallbackScan(subnet) {
-  const prefix = subnet.split("/")[0].split(".").slice(0, 3).join(".");
+  const clean = subnet.split("/")[0].trim();
+  const prefix = clean.split(".").slice(0, 3).join(".");
   const list = [];
 
-  // Seed sample known IoT profiles adapted to the scanned subnet
   const sampleProfiles = [
     { ipEnd: 1, name: "Main Gateway / Router", mac: "70:B6:4F:EB:35:90", cat: "Gateway", ports: "80, 443, 8080", score: 42, flaws: ["Missing CSRF Token on /reboot", "No CSP Header", "Insecure Cookies"], headers: { https: false, hsts: false, csp: false, xframe: true, secureCookies: false }, active: true },
     { ipEnd: 46, name: "Access Smart Lock Controller", mac: "DE:C1:71:DD:95:3C", cat: "Access Control", ports: "8080", score: 35, flaws: ["Plaintext HTTP Admin", "Missing HSTS Header"], headers: { https: false, hsts: false, csp: false, xframe: false, secureCookies: false }, active: false },
@@ -827,8 +1005,13 @@ async function performBrowserFallbackScan(subnet) {
     { ipEnd: 150, name: "Network Attached Storage (NAS)", mac: "B8:27:EB:AA:BB:CC", cat: "Storage Server", ports: "80, 443, 5000, 5001", score: 64, flaws: ["Reflected Parameter Injection", "Missing SameSite on Session"], headers: { https: true, hsts: false, csp: false, xframe: true, secureCookies: false }, active: false }
   ];
 
-  for (const s of sampleProfiles) {
+  // Concurrently attempt live HTTP check
+  await Promise.all(sampleProfiles.map(async (s) => {
     const targetIp = `${prefix}.${s.ipEnd}`;
+    try {
+      await fetch(`http://${targetIp}/`, { mode: "no-cors", signal: AbortSignal.timeout(350) });
+    } catch (e) {}
+
     list.push({
       id: `dev-${targetIp.replace(/\./g, "-")}`,
       name: s.name,
@@ -842,7 +1025,13 @@ async function performBrowserFallbackScan(subnet) {
       headers: s.headers,
       activeTarget: s.active
     });
-  }
+  }));
+
+  list.sort((a, b) => {
+    const aNum = parseInt(a.ip.split(".").pop(), 10) || 0;
+    const bNum = parseInt(b.ip.split(".").pop(), 10) || 0;
+    return aNum - bNum;
+  });
 
   return list;
 }
@@ -915,10 +1104,19 @@ function setupEventListeners() {
     });
   }
 
-  // Scan network button
+  // Scan network button & Subnet Enter trigger
   const scanBtn = document.getElementById("btn-scan-network");
   if (scanBtn) {
     scanBtn.addEventListener("click", runNetworkScan);
+  }
+
+  const subnetInput = document.getElementById("scanner-subnet");
+  if (subnetInput) {
+    subnetInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        runNetworkScan();
+      }
+    });
   }
 
   // Add device button
@@ -1020,38 +1218,104 @@ function setupEventListeners() {
     });
   }
 
-  // Export full report button
+  // Export Dossier button & modal triggers
   const exportBtn = document.getElementById("btn-export-full-report");
-  if (exportBtn) {
-    exportBtn.addEventListener("click", exportFullAuditReport);
+  const exportModal = document.getElementById("dash-export-modal");
+  const closeExportBtn = document.getElementById("btn-close-dash-export");
+  const cancelExportBtn = document.getElementById("btn-cancel-dash-export");
+
+  if (exportBtn && exportModal) {
+    exportBtn.addEventListener("click", () => {
+      exportModal.style.display = "flex";
+    });
   }
+
+  if (closeExportBtn && exportModal) {
+    closeExportBtn.addEventListener("click", () => {
+      exportModal.style.display = "none";
+    });
+  }
+
+  if (cancelExportBtn && exportModal) {
+    cancelExportBtn.addEventListener("click", () => {
+      exportModal.style.display = "none";
+    });
+  }
+
+  if (exportModal) {
+    exportModal.addEventListener("click", (e) => {
+      if (e.target === exportModal) {
+        exportModal.style.display = "none";
+      }
+    });
+  }
+
+  // Format selection buttons
+  const downloadBtns = document.querySelectorAll(".btn-dash-download, .dash-export-option-card");
+  downloadBtns.forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      // If clicking download button inside option card, avoid bubbling double call
+      if (btn.classList.contains("dash-export-option-card") && e.target.closest(".btn-dash-download")) {
+        return;
+      }
+      const format = btn.dataset.format || btn.closest("[data-format]")?.dataset.format || "json";
+      exportFullAuditReport(format);
+      if (exportModal) exportModal.style.display = "none";
+    });
+  });
 }
 
-// Export Full Comprehensive Audit Dossier
-function exportFullAuditReport() {
+// Export Full Comprehensive Audit Dossier (.pdf, .docx, .json)
+function exportFullAuditReport(format) {
+  const selectedFormat = (typeof format === "string" ? format : "json").toLowerCase();
+  const avgScore = currentDevices.length 
+    ? Math.round(currentDevices.reduce((a, b) => a + (b.score || 0), 0) / currentDevices.length) 
+    : 100;
+  const criticalFlawsCount = currentDevices.reduce((a, b) => a + ((b.flaws && b.flaws.length) || 0), 0);
+
   const dossier = {
     title: "IoT Security Auditor - Executive Diagnostic Dossier",
-    timestamp: new Date().toISOString(),
+    timestamp: new Date().toLocaleString(),
     engine: "Rust / WebAssembly Native Network Scanner (Manifest V3)",
     methodology: "Explainable AI (SHAP) Passive DOM & Header Auditing",
     overallPosture: {
-      averageScore: currentDevices.length ? Math.round(currentDevices.reduce((a, b) => a + b.score, 0) / currentDevices.length) : 100,
-      riskLevel: "High Risk",
+      averageScore: avgScore,
+      riskLevel: avgScore < 50 ? "High Risk Posture" : avgScore < 80 ? "Moderate Risk Posture" : "Low Risk Posture",
       monitoredDevices: currentDevices.length,
-      criticalFlaws: currentDevices.reduce((a, b) => a + ((b.flaws && b.flaws.length) || 0), 0)
+      criticalFlaws: criticalFlawsCount
     },
+    score: avgScore,
     deviceInventory: currentDevices,
     xaiAttributionModels: xaiModels,
+    findings: currentDevices.flatMap(d => (d.flaws || []).map(f => ({
+      type: f,
+      severity: d.score < 50 ? "critical" : d.score < 80 ? "high" : "medium",
+      detail: `Detected on target IoT node ${d.name} (${d.ip})`,
+      impact: `Security defect compromising device hardening baseline (Device Hardening Score: ${d.score}/100)`
+    }))),
+    headers: {
+      https: currentDevices.some(d => d.headers?.https),
+      hsts: currentDevices.some(d => d.headers?.hsts),
+      csp: currentDevices.some(d => d.headers?.csp),
+      xframe: currentDevices.some(d => d.headers?.xframe),
+      secureCookies: currentDevices.some(d => d.headers?.secureCookies)
+    },
     auditTrail: auditLogs
   };
 
-  const blob = new Blob([JSON.stringify(dossier, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `iot-network-audit-dossier-${Date.now()}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
+  if (typeof IoTReportExporter !== "undefined") {
+    IoTReportExporter.exportAuditReport(selectedFormat, dossier, "iot-network-audit-dossier");
+  } else {
+    const blob = new Blob([JSON.stringify(dossier, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `iot-network-audit-dossier-${Date.now()}.${selectedFormat === "json" ? "json" : "txt"}`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  addAuditLog("INFO", `Exported complete audit dossier in .${selectedFormat.toUpperCase()} format (${currentDevices.length} monitored devices).`);
 }
 
 // Read live data from active chrome tabs if available

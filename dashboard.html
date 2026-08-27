@@ -68,13 +68,24 @@
     <section id="tab-overview" class="tab-pane active">
       <!-- High-Level Metric Cards -->
       <div class="metrics-grid">
-        <div class="metric-card">
+        <div class="metric-card metric-score-card">
           <span class="metric-label">Network Risk Score</span>
-          <div class="metric-val-row">
-            <span class="metric-val text-critical" id="metric-score">48</span>
-            <span class="metric-max">/100</span>
+          <div class="metric-score-flex">
+            <div class="dash-circle-wrap">
+              <svg class="dash-ring-svg" viewBox="0 0 76 76">
+                <circle class="dash-ring-bg" cx="38" cy="38" r="32" />
+                <circle class="dash-ring-fill" id="dash-score-ring" cx="38" cy="38" r="32" />
+              </svg>
+              <div class="dash-circle-center">
+                <span class="metric-val text-critical" id="metric-score">48</span>
+                <span class="metric-max">/100</span>
+              </div>
+            </div>
+            <div class="dash-score-meta">
+              <span class="metric-sub text-critical" id="metric-score-status">⚠️ High Risk Posture</span>
+              <span class="dash-score-hint">Remediation required</span>
+            </div>
           </div>
-          <span class="metric-sub text-critical">⚠️ High Risk Posture Detected</span>
         </div>
 
         <div class="metric-card">
@@ -416,9 +427,15 @@
         <div class="modal-header-right">
           <div class="modal-score-box">
             <span class="score-label">Hardening Posture</span>
-            <div class="score-row">
-              <span id="modal-device-score" class="modal-score-val text-warning">65</span>
-              <span class="score-max">/100</span>
+            <div class="modal-circle-wrap">
+              <svg class="modal-ring-svg" viewBox="0 0 60 60">
+                <circle class="modal-ring-bg" cx="30" cy="30" r="24" />
+                <circle class="modal-ring-fill" id="modal-score-ring" cx="30" cy="30" r="24" />
+              </svg>
+              <div class="modal-circle-center">
+                <span id="modal-device-score" class="modal-score-val text-warning">65</span>
+                <span class="score-max">/100</span>
+              </div>
             </div>
           </div>
           <button class="modal-close-btn" id="btn-close-modal">✕</button>
@@ -448,6 +465,79 @@
     </div>
   </div>
 
+  <!-- Export Dossier Format Selection Modal -->
+  <div id="dash-export-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card dash-export-card">
+      <div class="modal-header">
+        <div class="modal-header-left">
+          <span class="modal-icon">⤓</span>
+          <div>
+            <h2 class="modal-title">Export Security Audit Dossier</h2>
+            <p class="modal-sub" style="font-size:12px; color:var(--text-secondary);">Select file format to download executive report:</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="btn-close-dash-export">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="dash-export-grid">
+          
+          <!-- PDF Option -->
+          <div class="dash-export-option-card" data-format="pdf">
+            <div class="dash-opt-header">
+              <span class="dash-opt-icon pdf">📄</span>
+              <div class="dash-opt-title-box">
+                <h4 class="dash-opt-name">PDF Document</h4>
+                <span class="badge badge-critical" style="font-size:10px;">.PDF</span>
+              </div>
+            </div>
+            <p class="dash-opt-desc">Executive-ready formatted dossier including high-level posture metrics, vulnerability breakdown, device inventory tables, and SHAP Explainable AI attribution weights.</p>
+            <button class="btn btn-primary btn-dash-download" data-format="pdf">
+              <span>⤓</span> Download PDF (.pdf)
+            </button>
+          </div>
+
+          <!-- DOCX Option -->
+          <div class="dash-export-option-card" data-format="docx">
+            <div class="dash-opt-header">
+              <span class="dash-opt-icon docx">📝</span>
+              <div class="dash-opt-title-box">
+                <h4 class="dash-opt-name">Word Document</h4>
+                <span class="badge badge-blue" style="font-size:10px;">.DOCX</span>
+              </div>
+            </div>
+            <p class="dash-opt-desc">Fully formatted Microsoft Word (.docx) audit document with styled tables, editable compliance sections, and security hardening recommendations for engineering teams.</p>
+            <button class="btn btn-secondary btn-dash-download" data-format="docx">
+              <span>⤓</span> Download Word (.docx)
+            </button>
+          </div>
+
+          <!-- JSON Option -->
+          <div class="dash-export-option-card" data-format="json">
+            <div class="dash-opt-header">
+              <span class="dash-opt-icon json">📦</span>
+              <div class="dash-opt-title-box">
+                <h4 class="dash-opt-name">JSON Data Dossier</h4>
+                <span class="badge badge-medium" style="font-size:10px;">.JSON</span>
+              </div>
+            </div>
+            <p class="dash-opt-desc">Raw structured diagnostic payload containing complete subnet device registry, 5-stage scan outputs, XAI attributions, and real-time security event log stream.</p>
+            <button class="btn btn-secondary btn-dash-download" data-format="json">
+              <span>⤓</span> Download JSON (.json)
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <span style="font-size:12px; color:var(--text-muted);">Verified against NIST SP 800-213 &amp; OWASP IoT standard auditing guidelines.</span>
+        <button class="btn btn-secondary" id="btn-cancel-dash-export">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="export-utils.js"></script>
   <script src="dashboard.js"></script>
 </body>
 </html>

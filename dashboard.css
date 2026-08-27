@@ -227,6 +227,75 @@ body {
   border-radius: 12px;
 }
 
+.metric-score-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.metric-score-flex {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+.dash-circle-wrap {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dash-ring-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.dash-ring-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 6;
+}
+
+.dash-ring-fill {
+  fill: none;
+  stroke: var(--color-critical);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 201.06;
+  stroke-dashoffset: 104.55;
+  transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.4s ease;
+}
+
+.dash-circle-center {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.dash-score-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dash-score-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
 .metric-label {
   font-size: 12px;
   font-weight: 600;
@@ -245,19 +314,20 @@ body {
 }
 
 .metric-val {
-  font-size: 32px;
+  font-size: 26px;
   font-weight: 800;
   color: #fff;
 }
 
 .metric-max, .metric-unit {
-  font-size: 14px;
+  font-size: 11px;
   color: var(--text-muted);
 }
 
 .metric-sub {
   font-size: 12px;
   color: var(--text-secondary);
+  font-weight: 600;
 }
 
 /* Overview Layout */
@@ -841,26 +911,58 @@ body {
 }
 
 .modal-score-box {
-  text-align: right;
-}
-
-.score-label {
-  font-size: 10px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  font-weight: 600;
-  display: block;
-}
-
-.score-row {
   display: flex;
-  align-items: baseline;
-  justify-content: flex-end;
+  flex-direction: column;
+  align-items: flex-end;
   gap: 4px;
 }
 
+.modal-circle-wrap {
+  position: relative;
+  width: 54px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-ring-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.modal-ring-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 5;
+}
+
+.modal-ring-fill {
+  fill: none;
+  stroke: var(--color-high);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-dasharray: 150.80;
+  stroke-dashoffset: 52.78;
+  transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.4s ease;
+}
+
+.modal-circle-center {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
 .modal-score-val {
-  font-size: 22px;
+  font-size: 16px;
   font-weight: 800;
 }
 
@@ -1011,5 +1113,87 @@ body {
   background: var(--bg-primary);
   border-radius: 0 0 12px 12px;
 }
+
+/* Dashboard Export Dossier Modal */
+.dash-export-card {
+  max-width: 820px;
+}
+
+.dash-export-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding: 10px 0;
+}
+
+@media (max-width: 768px) {
+  .dash-export-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dash-export-option-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  transition: all 0.2s ease;
+}
+
+.dash-export-option-card:hover {
+  border-color: var(--accent-blue);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.dash-opt-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dash-opt-icon {
+  font-size: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.dash-opt-title-box {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.dash-opt-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.dash-opt-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  flex: 1;
+}
+
+.btn-dash-download {
+  width: 100%;
+  justify-content: center;
+  padding: 10px;
+  font-size: 12px;
+}
+
 
 

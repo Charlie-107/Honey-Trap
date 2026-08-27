@@ -63,7 +63,8 @@
         "pkg/*.wasm",
         "pkg/*.js",
         "content.css",
-        "dashboard.html"
+        "dashboard.html",
+        "export-utils.js"
       ],
       "matches": [
         "http://*/*",

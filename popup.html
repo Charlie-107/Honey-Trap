@@ -34,9 +34,15 @@
   <!-- Security Score & Severity Counters -->
   <section class="score-card">
     <div class="score-display">
-      <div class="score-circle score-critical">
-        <span class="score-number" id="security-score">42</span>
-        <span class="score-max">/100</span>
+      <div class="score-circle-wrap">
+        <svg class="score-ring-svg" viewBox="0 0 60 60">
+          <circle class="score-ring-bg" cx="30" cy="30" r="25" />
+          <circle class="score-ring-fill" id="score-ring-fill" cx="30" cy="30" r="25" />
+        </svg>
+        <div class="score-circle-center">
+          <span class="score-number" id="security-score">42</span>
+          <span class="score-max">/100</span>
+        </div>
       </div>
       <div class="score-meta">
         <span class="score-rating">High Risk Posture</span>
@@ -97,47 +103,7 @@
     </div>
 
     <div class="findings-list" id="findings-container">
-      
-      <!-- Finding Card 1: DOM XSS -->
-      <article class="vuln-card critical-border">
-        <div class="vuln-top">
-          <span class="vuln-title">DOM-Based XSS</span>
-          <span class="vuln-tag tag-critical">Critical</span>
-        </div>
-        <p class="vuln-detail">Unsanitized input reflection detected in element <code class="code-target">input#device_name</code>.</p>
-        <div class="impact-box">
-          <strong>Exploit Impact:</strong> Allows execution of arbitrary JavaScript, enabling session hijacking and unauthorized device control.
-        </div>
-        <!-- SHAP Feature Attribution -->
-        <div class="shap-attribution">
-          <span class="shap-header">💡 SHAP Feature Attribution:</span>
-          <ul class="shap-list">
-            <li>Unescaped payload tag: <code class="shap-val">+0.74</code></li>
-            <li>DOM sink proximity (innerHTML): <code class="shap-val">+0.18</code></li>
-          </ul>
-        </div>
-      </article>
-
-      <!-- Finding Card 2: CSRF State-Changing -->
-      <article class="vuln-card high-border">
-        <div class="vuln-top">
-          <span class="vuln-title">Missing CSRF Token</span>
-          <span class="vuln-tag tag-high">High</span>
-        </div>
-        <p class="vuln-detail">State-changing endpoint <code class="code-target">POST /api/system/reboot</code> lacks anti-forgery protection.</p>
-        <div class="impact-box">
-          <strong>Exploit Impact:</strong> Permits unauthorized third-party origins to trigger state changes without user consent.
-        </div>
-        <!-- SHAP Feature Attribution -->
-        <div class="shap-attribution">
-          <span class="shap-header">💡 SHAP Feature Attribution:</span>
-          <ul class="shap-list">
-            <li>Missing Origin/Referer check: <code class="shap-val">+0.62</code></li>
-            <li>State-altering verb without nonce: <code class="shap-val">+0.29</code></li>
-          </ul>
-        </div>
-      </article>
-
+      <!-- Dynamically rendered and filtered via popup.js -->
     </div>
   </section>
 
@@ -156,6 +122,55 @@
     </div>
   </footer>
 
+  <!-- Export Format Selector Modal -->
+  <div id="export-modal" class="export-modal-overlay" style="display: none;">
+    <div class="export-modal-card">
+      <div class="export-modal-header">
+        <div class="export-modal-title">
+          <span>⤓</span> Export Audit Report
+        </div>
+        <button class="export-modal-close" id="btn-close-export-modal" title="Close">✕</button>
+      </div>
+      <p class="export-modal-desc">Select the desired file format to download:</p>
+      
+      <div class="export-options-list">
+        <button class="export-opt-btn" data-format="pdf">
+          <span class="opt-icon pdf">📄</span>
+          <div class="opt-text">
+            <div class="opt-title-row">
+              <span class="opt-title">PDF Document</span>
+              <span class="opt-badge">.pdf</span>
+            </div>
+            <span class="opt-desc">Executive report with findings &amp; headers</span>
+          </div>
+        </button>
+
+        <button class="export-opt-btn" data-format="docx">
+          <span class="opt-icon docx">📝</span>
+          <div class="opt-text">
+            <div class="opt-title-row">
+              <span class="opt-title">Word Document</span>
+              <span class="opt-badge">.docx</span>
+            </div>
+            <span class="opt-desc">Editable formatted report with tables</span>
+          </div>
+        </button>
+
+        <button class="export-opt-btn" data-format="json">
+          <span class="opt-icon json">📦</span>
+          <div class="opt-text">
+            <div class="opt-title-row">
+              <span class="opt-title">JSON Data</span>
+              <span class="opt-badge">.json</span>
+            </div>
+            <span class="opt-desc">Raw diagnostic state &amp; XAI attributions</span>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="export-utils.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>
