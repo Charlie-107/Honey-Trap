@@ -245,6 +245,8 @@ th { padding: 12px 16px; background: #f7f9f7; color: #75817d; font-size: 9px; le
 th:first-child, td:first-child { padding-left: 24px; }
 td { height: 70px; padding: 11px 16px; border-top: 1px solid #e6ebe7; color: #31413b; font-size: 12px; }
 tbody tr:hover { background: #fbfdfb; }
+.clickable-row { cursor: pointer; }
+.clickable-row:focus { outline: 2px solid var(--green); outline-offset: -2px; }
 .device-cell { display: flex; align-items: center; gap: 11px; }
 .device-avatar { width: 36px; height: 36px; border-radius: 5px; background: #eaf3ee; color: var(--green); display: grid; place-items: center; font-size: 17px; font-weight: 800; flex: 0 0 auto; }
 .device-avatar.iot { color: var(--orange); background: #fff0e7; }
@@ -322,6 +324,11 @@ tbody tr:hover { background: #fbfdfb; }
 .drawer-service-head h3 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 18px; font-weight: 500; }
 .drawer-service-head span { color: var(--muted); font-size: 10px; }
 .drawer-services { display: grid; gap: 8px; }
+.drawer-insights { display: grid; gap: 7px; }
+.drawer-insights > div { padding: 11px 12px; border: 1px solid var(--line); background: #fff; }
+.drawer-insights span,.drawer-insights strong { display: block; }
+.drawer-insights span { color: var(--muted); font-size: 8px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.drawer-insights strong { margin-top: 5px; font-size: 10px; line-height: 1.4; }
 .drawer-service { padding: 13px; border: 1px solid var(--line); background: #fff; }
 .drawer-service > div { display: flex; align-items: center; justify-content: space-between; }
 .drawer-service p { margin: 10px 0 0; color: #53625d; font-size: 11px; line-height: 1.45; }
@@ -406,6 +413,7 @@ html[data-theme="dark"] .live-toggle,
 html[data-theme="dark"] .page-link,
 html[data-theme="dark"] .drawer-facts,
 html[data-theme="dark"] .drawer-service,
+html[data-theme="dark"] .drawer-insights > div,
 html[data-theme="dark"] .service-device,
 html[data-theme="dark"] .assessment-card,
 html[data-theme="dark"] .plan-target,

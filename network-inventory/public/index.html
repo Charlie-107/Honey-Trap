@@ -93,6 +93,19 @@
       </div>
     </section>
   </main>
+  <div id="globalDrawerBackdrop" class="profile-backdrop" hidden></div>
+  <aside id="globalDeviceDrawer" class="profile-drawer" aria-hidden="true" aria-labelledby="globalDrawerTitle">
+    <button id="globalDrawerClose" class="profile-close" type="button" aria-label="Close device profile">&times;</button>
+    <p class="eyebrow">DEVICE PROFILE / SCAN EVIDENCE</p>
+    <h2 id="globalDrawerTitle">Device</h2>
+    <p id="globalDrawerSubtitle" class="profile-subtitle"></p>
+    <div id="globalDrawerFacts" class="profile-facts"></div>
+    <h3>Operational insights</h3>
+    <div id="globalDrawerInsights" class="profile-insights"></div>
+    <h3>Exposed services</h3>
+    <div id="globalDrawerServices" class="profile-services"></div>
+    <p class="profile-note">Details are inferred only from the latest bounded network scan. They are not vulnerability claims.</p>
+  </aside>
   <div id="toast" class="toast" role="alert"></div>
 </body>
 </html>

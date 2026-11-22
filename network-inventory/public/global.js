@@ -13,6 +13,9 @@ const elements = {
   agentList: $("#agentList"), deviceRows: $("#deviceRows"), deviceEmpty: $("#deviceEmpty"), eventList: $("#eventList"),
   search: $("#deviceSearch"), refreshTime: $("#refreshTime"), toast: $("#toast"),
   statusText: $("#workspaceStatusText"), themeToggle: $("#globalThemeToggle"),
+  drawerBackdrop: $("#globalDrawerBackdrop"), drawer: $("#globalDeviceDrawer"), drawerClose: $("#globalDrawerClose"),
+  drawerTitle: $("#globalDrawerTitle"), drawerSubtitle: $("#globalDrawerSubtitle"), drawerFacts: $("#globalDrawerFacts"),
+  drawerInsights: $("#globalDrawerInsights"), drawerServices: $("#globalDrawerServices"),
 };
 
 function text(tag, className, value) { const node = document.createElement(tag); if (className) node.className = className; node.textContent = value; return node; }
@@ -82,6 +85,35 @@ function renderAgents(data) {
   }));
 }
 
+function openDeviceProfile(device, agentName) {
+  const services = device.services || [];
+  const names = services.map((service) => service.name.toLowerCase());
+  const roles = [];
+  if (names.some((name) => ["http", "https", "http-proxy"].includes(name))) roles.push("Web interface");
+  if (names.some((name) => ["ssh", "telnet"].includes(name))) roles.push("Remote administration");
+  if (names.includes("domain")) roles.push("DNS service");
+  if (names.some((name) => ["rtsp", "mqtt", "coap"].includes(name))) roles.push("IoT communications");
+  if (names.some((name) => ["ipp", "printer", "jetdirect"].includes(name))) roles.push("Printing");
+  const encrypted = services.filter((service) => service.secure || ["https", "ssh", "mqtts"].includes(service.name.toLowerCase())).length;
+  const identified = [device.hostname, device.vendor && device.vendor !== "Unknown vendor" ? device.vendor : null].filter(Boolean).length;
+  elements.drawerTitle.textContent = device.name || "Unknown device";
+  elements.drawerSubtitle.textContent = `${device.group || "Other"} / ${device.typeLabel || "Unknown"}`;
+  const facts = [["Observed by", agentName], ["Hostname", device.hostname || "Not resolved"], ["Manufacturer", device.vendor || "Unknown vendor"], ["Response time", device.latencyMs === null || device.latencyMs === undefined ? "Not measured" : `${device.latencyMs} ms`], ["Last confirmed", device.lastSeen ? new Date(device.lastSeen).toLocaleString() : "Unknown"]];
+  elements.drawerFacts.replaceChildren(...facts.map(([label, value]) => { const item = document.createElement("div"); item.append(text("span", "", label), text("strong", "", value)); return item; }));
+  const insights = [["Likely role", roles.length ? roles.join(", ") : "No role inferred from exposed services"], ["Identity confidence", identified === 2 ? "Hostname and manufacturer identified" : (identified === 1 ? "Partially identified" : "Limited identity evidence")], ["Service exposure", services.length ? `${services.length} open service${services.length === 1 ? "" : "s"} observed` : "No open service found in the top 50 TCP ports"], ["Protected services", services.length ? `${encrypted} of ${services.length} identified as encrypted` : "No transport assessment available"]];
+  elements.drawerInsights.replaceChildren(...insights.map(([label, value]) => { const item = document.createElement("div"); item.append(text("span", "", label), text("strong", "", value)); return item; }));
+  elements.drawerServices.replaceChildren(...(services.length ? services.map((service) => { const item = document.createElement("div"); item.append(text("strong", "", service.name.toUpperCase()), text("span", "mono", `${service.port}/${service.protocol}`), text("p", "", service.detail || "No product or version fingerprint available.")); return item; }) : [text("div", "empty", "No exposed service was identified in the bounded scan.")]));
+  elements.drawerBackdrop.hidden = false;
+  elements.drawer.classList.add("open");
+  elements.drawer.setAttribute("aria-hidden", "false");
+}
+
+function closeDeviceProfile() {
+  elements.drawer.classList.remove("open");
+  elements.drawer.setAttribute("aria-hidden", "true");
+  elements.drawerBackdrop.hidden = true;
+}
+
 async function startScan(agentId, network, button) {
   try { button.disabled = true; await request("/api/global/scans", { method: "POST", body: JSON.stringify({ agentId, network }) }); toast(`Scan queued for ${network}.`); await refresh(); }
   catch (error) { toast(error.message, true); button.disabled = false; }
@@ -92,10 +124,14 @@ function renderDevices(data) {
   const query = state.query.toLowerCase();
   const devices = data.devices.filter((device) => [device.name, device.ip, device.mac, device.vendor, ...(device.services || []).map((service) => `${service.name} ${service.port}`)].filter(Boolean).join(" ").toLowerCase().includes(query));
   elements.deviceRows.replaceChildren(...devices.map((device) => {
-    const row = document.createElement("tr");
+    const row = document.createElement("tr"); row.className = "global-device-row"; row.tabIndex = 0;
     const identity = document.createElement("td"); identity.append(text("strong", "device-name", device.name || "Unknown device"), text("small", "", device.vendor || "Unknown vendor"));
     const services = (device.services || []).map((service) => `${service.name}:${service.port}`).join(", ") || "None found";
-    row.append(identity, text("td", "", agents[device.agentId] || "Unknown"), text("td", "", device.typeLabel || "Unknown"), text("td", "mono", device.ip), text("td", "mono", device.mac || "Not available"), text("td", "service-copy", services)); return row;
+    const agentName = agents[device.agentId] || "Unknown";
+    row.append(identity, text("td", "", agentName), text("td", "", device.typeLabel || "Unknown"), text("td", "mono", device.ip), text("td", "mono", device.mac || "Not available"), text("td", "service-copy", services));
+    row.addEventListener("click", () => openDeviceProfile(device, agentName));
+    row.addEventListener("keydown", (event) => { if (event.key === "Enter" || event.key === " ") openDeviceProfile(device, agentName); });
+    return row;
   }));
   elements.deviceEmpty.hidden = devices.length > 0;
 }
@@ -134,6 +170,9 @@ elements.themeToggle.addEventListener("click", () => {
   document.documentElement.dataset.globalTheme = next;
   localStorage.setItem("netscope-global-theme", next);
 });
+elements.drawerClose.addEventListener("click", closeDeviceProfile);
+elements.drawerBackdrop.addEventListener("click", closeDeviceProfile);
+document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeDeviceProfile(); });
 window.addEventListener("popstate", () => openWorkspaceView(location.pathname.slice(1), false));
 
 if (state.token) {

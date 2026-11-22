@@ -26,6 +26,7 @@ const elements = {
   drawerTitle: document.querySelector("#drawerTitle"),
   drawerSubtitle: document.querySelector("#drawerSubtitle"),
   drawerFacts: document.querySelector("#drawerFacts"),
+  drawerInsights: document.querySelector("#drawerInsights"),
   drawerServiceCount: document.querySelector("#drawerServiceCount"),
   drawerServices: document.querySelector("#drawerServices"),
   toast: document.querySelector("#toast"),
@@ -86,12 +87,32 @@ function openDrawer(device) {
   elements.drawerTitle.textContent = device.name;
   elements.drawerSubtitle.textContent = `${device.group} / ${device.typeLabel}`;
   elements.drawerFacts.replaceChildren();
-  [["IP address", device.ip], ["MAC address", device.mac || "Not available"], ["Manufacturer", device.vendor]].forEach(([label, value]) => {
+  [["Device group", device.group], ["Device type", device.typeLabel], ["Hostname", device.hostname || "Not resolved"], ["Manufacturer", device.vendor], ["Response time", device.latencyMs === null ? "Not measured" : `${device.latencyMs} ms`], ["Last confirmed", new Date(device.lastSeen).toLocaleString()]].forEach(([label, value]) => {
     const fact = document.createElement("div");
     fact.append(text("span", "", label), text("strong", label.includes("address") ? "mono" : "", value));
     elements.drawerFacts.append(fact);
   });
   const services = device.services || [];
+  const serviceNames = services.map((service) => service.name.toLowerCase());
+  const roles = [];
+  if (serviceNames.some((name) => ["http", "https", "http-proxy"].includes(name))) roles.push("Web interface");
+  if (serviceNames.some((name) => ["ssh", "telnet"].includes(name))) roles.push("Remote administration");
+  if (serviceNames.includes("domain")) roles.push("DNS service");
+  if (serviceNames.some((name) => ["rtsp", "mqtt", "coap"].includes(name))) roles.push("IoT communications");
+  if (serviceNames.some((name) => ["ipp", "printer", "jetdirect"].includes(name))) roles.push("Printing");
+  const encrypted = services.filter((service) => service.secure || ["https", "ssh", "mqtts"].includes(service.name.toLowerCase())).length;
+  const identitySignals = [device.hostname, device.vendor !== "Unknown vendor" ? device.vendor : null].filter(Boolean).length;
+  const insights = [
+    ["Likely role", roles.length ? roles.join(", ") : "No role inferred from exposed services"],
+    ["Identity confidence", identitySignals === 2 ? "Hostname and manufacturer identified" : (identitySignals === 1 ? "Partially identified" : "Limited identity evidence")],
+    ["Service exposure", services.length ? `${services.length} open service${services.length === 1 ? "" : "s"} in the bounded scan` : "No open service found in the top 50 TCP ports"],
+    ["Protected services", services.length ? `${encrypted} of ${services.length} identified as encrypted` : "No transport assessment available"],
+  ];
+  elements.drawerInsights.replaceChildren(...insights.map(([label, value]) => {
+    const item = document.createElement("div");
+    item.append(text("span", "", label), text("strong", "", value));
+    return item;
+  }));
   elements.drawerServiceCount.textContent = `${services.length} found`;
   if (!services.length) {
     elements.drawerServices.replaceChildren(text("div", "quiet-state", "No open service was identified in the top 50 TCP ports."));
@@ -121,6 +142,11 @@ function closeDrawer() {
 
 function createDeviceRow(device) {
   const row = document.createElement("tr");
+  row.className = "clickable-row";
+  row.tabIndex = 0;
+  row.setAttribute("aria-label", `Open details for ${device.name}`);
+  row.addEventListener("click", () => openDrawer(device));
+  row.addEventListener("keydown", (event) => { if (event.key === "Enter" || event.key === " ") openDrawer(device); });
   const identityCell = document.createElement("td");
   const identity = document.createElement("div");
   identity.className = "device-cell";
