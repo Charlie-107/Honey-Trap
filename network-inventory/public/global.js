@@ -1,4 +1,9 @@
-const state = { token: localStorage.getItem("netscope-workspace-token"), data: null, query: "", timer: null };
+const fragmentToken = new URLSearchParams(location.hash.slice(1)).get("workspace");
+if (fragmentToken) {
+  localStorage.setItem("netscope-workspace-token", fragmentToken);
+  history.replaceState(null, "", location.pathname);
+}
+const state = { token: fragmentToken || localStorage.getItem("netscope-workspace-token"), data: null, query: "", timer: null };
 const $ = (selector) => document.querySelector(selector);
 const elements = {
   welcome: $("#welcomeView"), workspace: $("#workspaceView"), create: $("#createWorkspace"), forget: $("#forgetWorkspace"),
@@ -25,7 +30,12 @@ function commandFor(code) {
   return `git clone https://github.com/Charlie-107/Honey-Trap.git && cd Honey-Trap/network-inventory && python3 agent.py --server ${location.origin} --pair ${code} && python3 agent.py`;
 }
 
-function showWorkspace() { elements.welcome.hidden = true; document.querySelector(".principles").hidden = true; elements.workspace.hidden = false; }
+function showWorkspace(updatePath = false) {
+  elements.welcome.hidden = true;
+  document.querySelector(".principles").hidden = true;
+  elements.workspace.hidden = false;
+  if (updatePath && location.pathname !== "/inventory") history.pushState(null, "", "/inventory");
+}
 
 async function createWorkspace() {
   try {
@@ -33,7 +43,7 @@ async function createWorkspace() {
     const data = await request("/api/global/workspaces", { method: "POST", body: "{}" });
     state.token = data.workspaceToken;
     localStorage.setItem("netscope-workspace-token", state.token);
-    showWorkspace();
+    showWorkspace(true);
     setPairCode(data.pairCode);
     await refresh();
   } catch (error) { toast(error.message, true); } finally { elements.create.disabled = false; }
@@ -91,6 +101,7 @@ function renderEvents(data) {
 function render(data) {
   state.data = data; const services = data.devices.reduce((sum, device) => sum + (device.services || []).length, 0); const active = data.tasks.some((task) => ["pending", "running"].includes(task.status));
   elements.agentCount.textContent = data.agents.length; elements.deviceCount.textContent = data.devices.length; elements.serviceCount.textContent = services; elements.statusCount.textContent = active ? "Scanning" : "Idle";
+  if (data.pairCode) setPairCode(data.pairCode);
   elements.pairPanel.classList.toggle("compact", data.agents.length > 0); elements.refreshTime.textContent = `Updated ${new Date().toLocaleTimeString()}`;
   renderAgents(data); renderDevices(data); renderEvents(data);
 }
@@ -104,6 +115,6 @@ async function refresh() {
 elements.create.addEventListener("click", createWorkspace); elements.newPairCode.addEventListener("click", newPairCode);
 elements.copy.addEventListener("click", async () => { await navigator.clipboard.writeText(elements.installCommand.textContent); toast("Install command copied."); });
 elements.search.addEventListener("input", (event) => { state.query = event.target.value.trim(); if (state.data) renderDevices(state.data); });
-elements.forget.addEventListener("click", () => { if (confirm("Forget this workspace token in this browser?")) { localStorage.removeItem("netscope-workspace-token"); location.reload(); } });
+elements.forget.addEventListener("click", () => { if (confirm("Forget this workspace token in this browser?")) { localStorage.removeItem("netscope-workspace-token"); location.href = "/global"; } });
 
-if (state.token) { showWorkspace(); refresh(); state.timer = setInterval(refresh, 3000); }
+if (state.token) { showWorkspace(true); refresh(); state.timer = setInterval(refresh, 3000); }

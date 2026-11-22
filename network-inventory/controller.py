@@ -404,10 +404,14 @@ class ControllerHandler(BaseHTTPRequestHandler):
                 "SELECT t.id, t.agent_id AS agentId, t.network, t.status, t.created_at AS createdAt FROM tasks t JOIN agents a ON a.id = t.agent_id WHERE a.workspace_id = ? ORDER BY t.id DESC LIMIT 20",
                 (workspace["id"],),
             )]
-        self.send_json({"agents": agents, "devices": devices, "events": events, "tasks": tasks})
+            pair = connection.execute(
+                "SELECT code FROM pair_codes WHERE workspace_id = ? AND expires_at >= ? ORDER BY expires_at DESC LIMIT 1",
+                (workspace["id"], int(time.time())),
+            ).fetchone()
+        self.send_json({"agents": agents, "devices": devices, "events": events, "tasks": tasks, "pairCode": pair["code"] if pair else None})
 
     def serve_static(self, request_path: str) -> None:
-        relative = "index.html" if request_path in {"/", "/global", "/global/"} else request_path.lstrip("/")
+        relative = "index.html" if request_path in {"/", "/global", "/global/", "/inventory", "/inventory/"} else request_path.lstrip("/")
         candidate = (STATIC_ROOT / relative).resolve()
         try:
             candidate.relative_to(STATIC_ROOT.resolve())
