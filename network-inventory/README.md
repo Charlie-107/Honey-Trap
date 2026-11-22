@@ -64,3 +64,25 @@ No Python or JavaScript packages are required.
   attacks, denial-of-service tests, or persistence actions.
 
 Only scan networks you own or are authorized to administer.
+
+## Global Agent Mode
+
+The public controller lets separate users inventory their own local networks
+without exposing the controller host's LAN. Each user creates an isolated
+capability workspace and pairs an outbound-only desktop agent.
+
+Start the controller:
+
+```bash
+./run-controller.sh
+```
+
+Pair an agent using the short-lived code shown by the controller:
+
+```bash
+python3 agent.py --server https://your-controller.example --pair ABCD1234
+python3 agent.py
+```
+
+The agent accepts only directly connected RFC1918 IPv4 networks with no more
+than 4,096 addresses. It rejects arbitrary CIDRs and public internet targets.

@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="NetScope global agent-backed local network inventory">
+  <title>NetScope Global</title>
+  <link rel="stylesheet" href="/global.css">
+  <script src="/global.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/global"><span class="brand-mark">N</span><span>NETSCOPE <b>GLOBAL</b></span></a>
+    <div class="trust"><span></span>Agent-backed private scanning</div>
+  </header>
+
+  <main>
+    <section id="welcomeView" class="welcome">
+      <div class="hero-copy">
+        <p class="eyebrow">YOUR NETWORK. YOUR AGENT. YOUR DATA.</p>
+        <h1>See every device<br>on <em>your</em> network.</h1>
+        <p class="hero-text">NetScope discovers routers, computers, phones, printers, and IoT devices through an agent you explicitly install on your own desktop.</p>
+        <button id="createWorkspace" class="primary" type="button">Create private workspace</button>
+        <p class="fine-print">No browser can scan a LAN directly. NetScope never scans from the cloud and never accepts arbitrary public targets.</p>
+      </div>
+      <div class="network-visual" aria-hidden="true">
+        <div class="orbit orbit-one"><i></i><i></i></div>
+        <div class="orbit orbit-two"><i></i><i></i><i></i></div>
+        <div class="core">N</div>
+        <span class="visual-label">OUTBOUND<br>ONLY</span>
+      </div>
+    </section>
+
+    <section class="principles">
+      <article><span>01</span><strong>Install</strong><p>Run the desktop agent on a computer connected to the network you administer.</p></article>
+      <article><span>02</span><strong>Pair</strong><p>Use a short-lived code to connect the agent to your isolated private workspace.</p></article>
+      <article><span>03</span><strong>Discover</strong><p>Choose a directly connected private network and review the resulting inventory.</p></article>
+    </section>
+
+    <section id="workspaceView" class="workspace" hidden>
+      <div class="workspace-head">
+        <div><p class="eyebrow">PRIVATE CAPABILITY WORKSPACE</p><h1>Network inventory</h1></div>
+        <button id="forgetWorkspace" class="text-button" type="button">Forget this browser</button>
+      </div>
+
+      <section id="pairPanel" class="pair-panel">
+        <div>
+          <p class="eyebrow">CONNECT A DESKTOP</p>
+          <h2>Pair your first agent</h2>
+          <p>The code expires after ten minutes and can be used once.</p>
+        </div>
+        <div class="pair-code-wrap"><span>PAIRING CODE</span><strong id="pairCode">--------</strong><button id="newPairCode" type="button">New code</button></div>
+        <div class="install-command"><span>RUN ON YOUR LINUX DESKTOP</span><code id="installCommand"></code><button id="copyCommand" type="button">Copy</button></div>
+      </section>
+
+      <section class="summary-grid">
+        <article><span>AGENTS</span><strong id="agentCount">0</strong><small>Paired desktops</small></article>
+        <article><span>DEVICES</span><strong id="deviceCount">0</strong><small>Latest discoveries</small></article>
+        <article><span>SERVICES</span><strong id="serviceCount">0</strong><small>Exposed TCP services</small></article>
+        <article><span>STATUS</span><strong id="statusCount">Idle</strong><small>Workspace scan state</small></article>
+      </section>
+
+      <section class="panel agents-panel">
+        <div class="panel-head"><div><p class="eyebrow">AUTHORIZED SCANNERS</p><h2>Desktop agents</h2></div><span id="refreshTime">Updating...</span></div>
+        <div id="agentList" class="agent-list"><div class="empty">No agent paired yet.</div></div>
+      </section>
+
+      <section class="panel inventory-panel">
+        <div class="panel-head"><div><p class="eyebrow">CONSOLIDATED VIEW</p><h2>Discovered devices</h2></div><input id="deviceSearch" type="search" placeholder="Search name, IP, MAC, service"></div>
+        <div class="table-wrap">
+          <table><thead><tr><th>Device</th><th>Agent</th><th>Type</th><th>IP address</th><th>MAC address</th><th>Services</th></tr></thead><tbody id="deviceRows"></tbody></table>
+          <div id="deviceEmpty" class="empty">Run a scan from a paired agent to populate the inventory.</div>
+        </div>
+      </section>
+
+      <section class="panel activity-panel">
+        <div class="panel-head"><div><p class="eyebrow">AUDIT TRAIL</p><h2>Workspace activity</h2></div></div>
+        <div id="eventList" class="event-list"><div class="empty">No activity yet.</div></div>
+      </section>
+    </section>
+  </main>
+  <div id="toast" class="toast" role="alert"></div>
+</body>
+</html>
