@@ -12,6 +12,21 @@
   --shadow: 0 16px 38px rgba(34, 55, 46, 0.08);
 }
 
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #e7f1ec;
+  --muted: #92a49b;
+  --line: #2d4037;
+  --surface: #14221c;
+  --canvas: #0b1410;
+  --green: #55c497;
+  --green-dark: #83d9b5;
+  --green-soft: #1c3a2e;
+  --orange: #ed9868;
+  --blue: #82a7d2;
+  --shadow: 0 18px 44px rgba(0, 0, 0, .28);
+}
+
 * { box-sizing: border-box; }
 
 html { scroll-behavior: smooth; }
@@ -84,8 +99,27 @@ button, select { cursor: pointer; }
 .nav-item.active { background: #1b3a30; color: #fff; box-shadow: inset 3px 0 #5bc297; }
 .nav-icon { width: 20px; text-align: center; font-size: 19px; }
 
-.scope-note {
+.theme-toggle {
+  width: 100%;
   margin-top: auto;
+  padding: 10px 12px;
+  border: 1px solid #345046;
+  border-radius: 6px;
+  color: #bdd0c7;
+  background: #172f27;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: .14em;
+}
+.theme-toggle:hover { border-color: #5da98a; color: #fff; }
+.theme-orb { width: 15px; height: 15px; border: 1px solid #7cc1a4; border-radius: 50%; background: #d9f1e7; box-shadow: inset -5px -2px #1d3b30; transition: .2s ease; }
+html[data-theme="dark"] .theme-orb { background: #f0c96d; border-color: #f0c96d; box-shadow: inset -5px -2px #172f27, 0 0 8px rgba(240,201,109,.22); transform: rotate(-18deg); }
+
+.scope-note {
+  margin-top: 12px;
   border-top: 1px solid #294239;
   padding: 22px 4px 0;
   display: flex;
@@ -357,6 +391,47 @@ footer { padding: 18px 2px 0; display: flex; justify-content: space-between; col
 .toast.show { transform: none; opacity: 1; }
 .toast.error { background: #7f302c; }
 
+html[data-theme="dark"] body { background-image: linear-gradient(rgba(126, 180, 153, .025) 1px, transparent 1px), linear-gradient(90deg, rgba(126, 180, 153, .025) 1px, transparent 1px); }
+html[data-theme="dark"] .sidebar { background: #09130f; }
+html[data-theme="dark"] .nav-item.active { background: #17352a; }
+html[data-theme="dark"] select,
+html[data-theme="dark"] input,
+html[data-theme="dark"] .page-link,
+html[data-theme="dark"] .drawer-facts,
+html[data-theme="dark"] .drawer-service,
+html[data-theme="dark"] .service-device,
+html[data-theme="dark"] .assessment-card,
+html[data-theme="dark"] .plan-target,
+html[data-theme="dark"] .secondary-action { background: #182720; color: var(--ink); border-color: var(--line); }
+html[data-theme="dark"] .status-strip { background: rgba(20, 34, 28, .78); }
+html[data-theme="dark"] th,
+html[data-theme="dark"] .subpanel-head,
+html[data-theme="dark"] .assessment-controls,
+html[data-theme="dark"] .test-plan { background: #101c17; }
+html[data-theme="dark"] tbody tr:hover,
+html[data-theme="dark"] .service-device:hover { background: #192a22; }
+html[data-theme="dark"] .device-avatar { background: #1c392d; }
+html[data-theme="dark"] .device-avatar.iot { background: #44291d; }
+html[data-theme="dark"] .filter span,
+html[data-theme="dark"] .service-button { background: #223129; }
+html[data-theme="dark"] .service-button.found,
+html[data-theme="dark"] .service-badge strong { background: #1c3a2e; }
+html[data-theme="dark"] .group-pill.iot { background: #342319; border-color: #6d4934; color: #efaa80; }
+html[data-theme="dark"] .service-badge { background: #182720; border-color: var(--line); }
+html[data-theme="dark"] .device-drawer { background: #101b17; }
+html[data-theme="dark"] .drawer-close { color: var(--ink); background: #182720; border-color: var(--line); }
+html[data-theme="dark"] .drawer-note,
+html[data-theme="dark"] .page-notice { background: #152820; color: #a8bdb3; border-color: #28483a; }
+html[data-theme="dark"] .assessment-hero { background: #081510; }
+html[data-theme="dark"] .assessment-filter { background: #182720; border-color: var(--line); color: var(--muted); }
+html[data-theme="dark"] .assessment-filter.active { background: #1c3a2e; color: var(--green); border-color: var(--green); }
+html[data-theme="dark"] .mode-tag { background: #26342d; color: #b8c8c0; }
+html[data-theme="dark"] .category-tag { background: #213246; }
+html[data-theme="dark"] .category-tag.iot { background: #44291d; }
+html[data-theme="dark"] .category-tag.network { background: #302942; }
+html[data-theme="dark"] .plan-head > span,
+html[data-theme="dark"] .recommended-tag { background: #1c3a2e; }
+
 @media (max-width: 1050px) {
   .app-shell { grid-template-columns: 76px 1fr; }
   .sidebar { padding: 28px 12px; align-items: center; }
@@ -379,6 +454,8 @@ footer { padding: 18px 2px 0; display: flex; justify-content: space-between; col
   .nav-item { border-radius: 0; }
   .nav-item.active { box-shadow: inset 0 -2px #5bc297; }
   .scope-note { display: none; }
+  .theme-toggle { width: auto; margin: 0 0 0 auto; padding: 9px; }
+  .theme-toggle > span:last-child { display: none; }
   main { padding: 27px 16px 18px; }
   .topbar { align-items: stretch; flex-direction: column; }
   .page-topbar { min-height: 0; }
