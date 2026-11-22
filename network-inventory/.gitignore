@@ -1,0 +1,5 @@
+.netscope-env
+bin/
+__pycache__/
+*.py[cod]
+*.log

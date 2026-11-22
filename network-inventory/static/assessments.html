@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Authorized device security assessment planner">
+  <title>Assessments | NetScope</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/assessments.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="/inventory" aria-label="NetScope inventory"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>NETSCOPE</span></a>
+      <nav class="primary-nav" aria-label="Primary navigation">
+        <a class="nav-item" href="/inventory"><span class="nav-icon">&#8961;</span><span>Inventory</span></a>
+        <a class="nav-item active" href="/assessments"><span class="nav-icon">&#9671;</span><span>Assessments</span></a>
+        <a class="nav-item" href="/activity"><span class="nav-icon">&#9676;</span><span>Activity</span></a>
+      </nav>
+      <div class="scope-note"><span class="scope-dot"></span><div><strong>Local mode</strong><small>Direct networks only</small></div></div>
+    </aside>
+
+    <main>
+      <header class="topbar page-topbar">
+        <div><p class="eyebrow">NETWORK OPERATIONS / ASSESSMENTS</p><h1>Security plans</h1></div>
+        <a class="page-link" href="/inventory">View device inventory</a>
+      </header>
+
+      <section id="assessments" class="assessment-panel standalone-panel">
+        <div class="assessment-hero">
+          <div>
+            <p class="section-label">AUTHORIZED SECURITY TESTING</p>
+            <h2>Penetration assessment planner</h2>
+            <p>Build a controlled, non-destructive test plan for discovered IT and IoT assets.</p>
+          </div>
+          <div class="authorization-card">
+            <span class="authorization-icon">&#10003;</span>
+            <div><strong>Safety boundary</strong><small>No exploitation, password attacks, disruption, or persistence.</small></div>
+          </div>
+        </div>
+        <div id="inventoryNotice" class="page-notice">Loading the shared device inventory...</div>
+        <div class="assessment-controls">
+          <label><span>Target device</span><select id="assessmentDevice"><option value="">Loading discovered targets...</option></select></label>
+          <label class="authorization-check"><input id="authorizationCheck" type="checkbox"><span>I confirm this device is in my authorized testing scope.</span></label>
+        </div>
+        <div class="assessment-layout">
+          <div class="test-catalog">
+            <div class="catalog-head">
+              <div><p class="section-label">TEST CATALOG</p><h3>Choose security checks</h3></div>
+              <div class="assessment-filters" aria-label="Assessment categories">
+                <button class="assessment-filter active" type="button" data-assessment-filter="all">All</button>
+                <button class="assessment-filter" type="button" data-assessment-filter="general">General</button>
+                <button class="assessment-filter" type="button" data-assessment-filter="iot">IoT</button>
+                <button class="assessment-filter" type="button" data-assessment-filter="network">Network</button>
+              </div>
+            </div>
+            <div id="assessmentCatalog" class="assessment-cards"></div>
+          </div>
+          <aside class="test-plan">
+            <div class="plan-head"><div><p class="section-label">CURRENT PLAN</p><h3>Assessment queue</h3></div><span id="planCount">0 checks</span></div>
+            <div id="planTarget" class="plan-target">Select a discovered device.</div>
+            <div id="planItems" class="plan-items"><div class="quiet-state">Choose checks from the catalog to create a plan.</div></div>
+            <div class="plan-actions"><button id="clearPlan" class="secondary-action" type="button" disabled>Clear</button><button id="exportPlan" class="primary-action" type="button" disabled>Export JSON plan</button></div>
+          </aside>
+        </div>
+      </section>
+      <footer><span>NetScope Inventory v1.2</span><span>Use only on networks you own or administer.</span></footer>
+    </main>
+  </div>
+  <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+</body>
+</html>

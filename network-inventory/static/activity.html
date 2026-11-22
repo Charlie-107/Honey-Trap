@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Network scan activity and exposed service catalog">
+  <title>Activity | NetScope</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/activity.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="/inventory" aria-label="NetScope inventory"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>NETSCOPE</span></a>
+      <nav class="primary-nav" aria-label="Primary navigation">
+        <a class="nav-item" href="/inventory"><span class="nav-icon">&#8961;</span><span>Inventory</span></a>
+        <a class="nav-item" href="/assessments"><span class="nav-icon">&#9671;</span><span>Assessments</span></a>
+        <a class="nav-item active" href="/activity"><span class="nav-icon">&#9676;</span><span>Activity</span></a>
+      </nav>
+      <div class="scope-note"><span class="scope-dot"></span><div><strong>Live state</strong><small>Shared scan activity</small></div></div>
+    </aside>
+
+    <main>
+      <header class="topbar page-topbar">
+        <div><p class="eyebrow">NETWORK OPERATIONS / ACTIVITY</p><h1>Service activity</h1></div>
+        <a class="page-link" href="/inventory">Run a new scan</a>
+      </header>
+      <section id="activityStatus" class="status-strip" aria-live="polite">
+        <div class="status-copy"><span id="statusPulse" class="pulse idle"></span><strong id="statusTitle">Loading activity</strong><span id="statusDetail">Reading shared scan state.</span></div>
+        <span id="lastScan" class="last-scan">No scans yet</span>
+      </section>
+      <section class="metrics activity-metrics" aria-label="Activity summary">
+        <article class="metric-card metric-total"><div class="metric-heading"><span>ONLINE DEVICES</span><span class="metric-glyph">&#8756;</span></div><strong id="deviceCount">0</strong><small>Latest inventory result</small></article>
+        <article class="metric-card metric-other"><div class="metric-heading"><span>OPEN SERVICES</span><span class="metric-glyph">&#9678;</span></div><strong id="openServiceCount">0</strong><small>Network-exposed services</small></article>
+        <article class="metric-card metric-iot"><div class="metric-heading"><span>SCAN EVENTS</span><span class="metric-glyph">&#9676;</span></div><strong id="eventCount">0</strong><small>Events retained in memory</small></article>
+      </section>
+      <section id="activity" class="activity-panel standalone-panel">
+        <div class="activity-head">
+          <div><p class="section-label">NETWORK OBSERVABILITY</p><h2>Activity &amp; services</h2></div>
+          <p>Shows network-exposed services only. Internal applications require device agents or credentials.</p>
+        </div>
+        <div class="activity-grid">
+          <article class="activity-feed">
+            <div class="subpanel-head"><div><span class="live-mark"></span><strong>Scan activity</strong></div><small id="activityCount">0 events</small></div>
+            <div id="activityList" class="activity-list"><div class="quiet-state">Run a scan to begin the activity timeline.</div></div>
+          </article>
+          <article class="service-catalog">
+            <div class="subpanel-head"><strong>Service catalog</strong><small>Top 50 TCP ports</small></div>
+            <div id="serviceCatalog" class="service-list"><div class="quiet-state">Detected services will appear here.</div></div>
+          </article>
+        </div>
+      </section>
+      <footer><span>NetScope Inventory v1.2</span><span>Use only on networks you own or administer.</span></footer>
+    </main>
+  </div>
+  <div id="drawerBackdrop" class="drawer-backdrop" hidden></div>
+  <aside id="deviceDrawer" class="device-drawer" aria-hidden="true" aria-labelledby="drawerTitle">
+    <button id="drawerClose" class="drawer-close" type="button" aria-label="Close device details">&times;</button>
+    <p class="section-label">DEVICE PROFILE</p><h2 id="drawerTitle">Device</h2><div id="drawerSubtitle" class="drawer-subtitle"></div><div id="drawerFacts" class="drawer-facts"></div>
+    <div class="drawer-service-head"><h3>Exposed services</h3><span id="drawerServiceCount">0 found</span></div>
+    <div id="drawerServices" class="drawer-services"></div>
+    <p class="drawer-note">Service names and versions are best-effort fingerprints from network responses.</p>
+  </aside>
+  <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Local network device inventory and IoT discovery dashboard">
+  <title>NetScope Inventory</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/inventory.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="/" aria-label="NetScope home">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>NETSCOPE</span>
+      </a>
+      <nav class="primary-nav" aria-label="Primary navigation">
+        <a class="nav-item active" href="/inventory">
+          <span class="nav-icon">&#8961;</span>
+          <span>Inventory</span>
+        </a>
+        <a class="nav-item" href="/assessments">
+          <span class="nav-icon">&#9671;</span>
+          <span>Assessments</span>
+        </a>
+        <a class="nav-item" href="/activity">
+          <span class="nav-icon">&#9676;</span>
+          <span>Activity</span>
+        </a>
+      </nav>
+      <div class="scope-note">
+        <span class="scope-dot"></span>
+        <div><strong>Local mode</strong><small>Direct networks only</small></div>
+      </div>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">NETWORK OPERATIONS / INVENTORY</p>
+          <h1>Device map</h1>
+        </div>
+        <div class="scan-control">
+          <label for="networkSelect">Scan scope</label>
+          <div class="scan-row">
+            <select id="networkSelect" aria-label="Network to scan"><option>Detecting networks...</option></select>
+            <button id="scanButton" class="scan-button" type="button">
+              <span class="radar-icon" aria-hidden="true"></span>
+              <span id="scanButtonText">Run scan</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <section class="status-strip" aria-live="polite">
+        <div class="status-copy">
+          <span id="statusPulse" class="pulse idle"></span>
+          <strong id="statusTitle">Ready to discover</strong>
+          <span id="statusDetail">Choose a local network and run your first scan.</span>
+        </div>
+        <span id="lastScan" class="last-scan">No scans yet</span>
+      </section>
+
+      <section class="metrics" aria-label="Inventory summary">
+        <article class="metric-card metric-total">
+          <div class="metric-heading"><span>DISCOVERED</span><span class="metric-glyph">&#8756;</span></div>
+          <strong id="totalCount">0</strong>
+          <small>Total online devices</small>
+        </article>
+        <article class="metric-card metric-iot">
+          <div class="metric-heading"><span>IOT ESTATE</span><span class="metric-glyph">&#8962;</span></div>
+          <strong id="iotCount">0</strong>
+          <small>Connected smart devices</small>
+        </article>
+        <article class="metric-card metric-other">
+          <div class="metric-heading"><span>OTHER ASSETS</span><span class="metric-glyph">&#9649;</span></div>
+          <strong id="otherCount">0</strong>
+          <small>Computers and infrastructure</small>
+        </article>
+        <article class="metric-card metric-identity">
+          <div class="metric-heading"><span>OPEN SERVICES</span><span class="metric-glyph">&#9678;</span></div>
+          <strong id="serviceCount">0</strong>
+          <small>Network-exposed services found</small>
+        </article>
+      </section>
+
+      <section id="inventory" class="inventory-panel">
+        <div class="inventory-head">
+          <div>
+            <p class="section-label">LIVE INVENTORY</p>
+            <h2>Connected devices</h2>
+          </div>
+          <label class="search-box">
+            <span aria-hidden="true">&#8981;</span>
+            <input id="searchInput" type="search" placeholder="Search name, IP, MAC, vendor or service" autocomplete="off">
+          </label>
+        </div>
+
+        <div class="toolbar">
+          <div class="filter-tabs" role="tablist" aria-label="Device groups">
+            <button class="filter active" type="button" data-filter="all">All <span id="allBadge">0</span></button>
+            <button class="filter" type="button" data-filter="IoT">IoT <span id="iotBadge">0</span></button>
+            <button class="filter" type="button" data-filter="Other">Other <span id="otherBadge">0</span></button>
+          </div>
+          <span id="resultCount" class="result-count">0 devices</span>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Device</th>
+                <th>Group / Type</th>
+                <th>IP address</th>
+                <th>MAC address</th>
+                <th>Manufacturer</th>
+                <th>Services</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="deviceRows"></tbody>
+          </table>
+          <div id="emptyState" class="empty-state">
+            <div class="empty-radar" aria-hidden="true"><span></span></div>
+            <h3>No devices mapped</h3>
+            <p>Run a scan to build an inventory of devices visible from this machine.</p>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <span>NetScope Inventory v1.2</span>
+        <span>Use only on networks you own or administer.</span>
+      </footer>
+    </main>
+  </div>
+  <div id="drawerBackdrop" class="drawer-backdrop" hidden></div>
+  <aside id="deviceDrawer" class="device-drawer" aria-hidden="true" aria-labelledby="drawerTitle">
+    <button id="drawerClose" class="drawer-close" type="button" aria-label="Close device details">&times;</button>
+    <p class="section-label">DEVICE PROFILE</p>
+    <h2 id="drawerTitle">Device</h2>
+    <div id="drawerSubtitle" class="drawer-subtitle"></div>
+    <div id="drawerFacts" class="drawer-facts"></div>
+    <div class="drawer-service-head">
+      <h3>Exposed services</h3>
+      <span id="drawerServiceCount">0 found</span>
+    </div>
+    <div id="drawerServices" class="drawer-services"></div>
+    <p class="drawer-note">Service names and versions are best-effort fingerprints from network responses.</p>
+  </aside>
+  <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+</body>
+</html>
