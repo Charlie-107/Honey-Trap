@@ -22,7 +22,7 @@ async function request(path, options = {}) {
 }
 
 function commandFor(code) {
-  return `git clone https://github.com/Charlie-107/Honey-Trap.git && cd Honey-Trap/network-inventory && python3 agent.py --server ${location.origin} --pair ${code}`;
+  return `git clone https://github.com/Charlie-107/Honey-Trap.git && cd Honey-Trap/network-inventory && python3 agent.py --server ${location.origin} --pair ${code} && python3 agent.py`;
 }
 
 function showWorkspace() { elements.welcome.hidden = true; document.querySelector(".principles").hidden = true; elements.workspace.hidden = false; }
