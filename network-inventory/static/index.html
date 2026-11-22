@@ -47,6 +47,11 @@
           <label for="networkSelect">Scan scope</label>
           <div class="scan-row">
             <select id="networkSelect" aria-label="Network to scan"><option>Detecting networks...</option></select>
+            <label class="live-toggle" title="Repeat the real network scan every 60 seconds">
+              <input id="liveToggle" type="checkbox">
+              <span class="live-switch" aria-hidden="true"></span>
+              <span>Live / 60s</span>
+            </label>
             <button id="scanButton" class="scan-button" type="button">
               <span class="radar-icon" aria-hidden="true"></span>
               <span id="scanButtonText">Run scan</span>
@@ -126,7 +131,7 @@
           <div id="emptyState" class="empty-state">
             <div class="empty-radar" aria-hidden="true"><span></span></div>
             <h3>No devices mapped</h3>
-            <p>Run a scan to build an inventory of devices visible from this machine.</p>
+            <p>Run a current scan or enable live monitoring. No demo devices are shown.</p>
           </div>
         </div>
       </section>

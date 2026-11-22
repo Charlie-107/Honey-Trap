@@ -411,7 +411,8 @@ class ControllerHandler(BaseHTTPRequestHandler):
         self.send_json({"agents": agents, "devices": devices, "events": events, "tasks": tasks, "pairCode": pair["code"] if pair else None})
 
     def serve_static(self, request_path: str) -> None:
-        relative = "index.html" if request_path in {"/", "/global", "/global/", "/inventory", "/inventory/"} else request_path.lstrip("/")
+        pages = {"/", "/global", "/global/", "/inventory", "/inventory/", "/agents", "/agents/", "/activity", "/activity/"}
+        relative = "index.html" if request_path in pages else request_path.lstrip("/")
         candidate = (STATIC_ROOT / relative).resolve()
         try:
             candidate.relative_to(STATIC_ROOT.resolve())

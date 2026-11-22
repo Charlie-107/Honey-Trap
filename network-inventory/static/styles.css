@@ -142,6 +142,12 @@ h1 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp
 .scan-control { display: grid; gap: 7px; }
 .scan-control label { color: var(--muted); font-size: 11px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
 .scan-row { display: flex; gap: 8px; }
+.live-toggle { min-height: 42px; padding: 0 11px; border: 1px solid #cfdad3; border-radius: 6px; background: #fff; display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 9px; font-weight: 800; white-space: nowrap; cursor: pointer; }
+.live-toggle input { position: absolute; opacity: 0; pointer-events: none; }
+.live-switch { width: 24px; height: 13px; padding: 2px; border-radius: 8px; background: #afbbb5; transition: .2s ease; }
+.live-switch::after { content: ""; display: block; width: 9px; height: 9px; border-radius: 50%; background: #fff; transition: transform .2s ease; }
+.live-toggle input:checked + .live-switch { background: var(--green); }
+.live-toggle input:checked + .live-switch::after { transform: translateX(11px); }
 select {
   min-width: 225px;
   border: 1px solid #cfdad3;
@@ -396,6 +402,7 @@ html[data-theme="dark"] .sidebar { background: #09130f; }
 html[data-theme="dark"] .nav-item.active { background: #17352a; }
 html[data-theme="dark"] select,
 html[data-theme="dark"] input,
+html[data-theme="dark"] .live-toggle,
 html[data-theme="dark"] .page-link,
 html[data-theme="dark"] .drawer-facts,
 html[data-theme="dark"] .drawer-service,
@@ -488,6 +495,7 @@ html[data-theme="dark"] .recommended-tag { background: #1c3a2e; }
 
 @media (max-width: 420px) {
   .scan-row { align-items: stretch; flex-direction: column; }
+  .live-toggle { justify-content: center; }
   .scan-button { min-height: 43px; justify-content: center; }
   .metrics { grid-template-columns: 1fr 1fr; }
   .metric-card small { line-height: 1.35; }

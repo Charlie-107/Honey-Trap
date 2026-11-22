@@ -1,9 +1,10 @@
-const state = { devices: [], filter: "all", query: "", pollTimer: null };
+const state = { devices: [], filter: "all", query: "", pollTimer: null, liveTimer: null, scanning: false, awaitingScan: false, hasCurrentResult: false };
 
 const elements = {
   networkSelect: document.querySelector("#networkSelect"),
   scanButton: document.querySelector("#scanButton"),
   scanButtonText: document.querySelector("#scanButtonText"),
+  liveToggle: document.querySelector("#liveToggle"),
   statusPulse: document.querySelector("#statusPulse"),
   statusTitle: document.querySelector("#statusTitle"),
   statusDetail: document.querySelector("#statusDetail"),
@@ -52,6 +53,7 @@ async function request(url, options) {
 }
 
 function setScanning(scanning, phase) {
+  state.scanning = scanning;
   elements.scanButton.disabled = scanning || !elements.networkSelect.value;
   elements.scanButton.classList.toggle("scanning", scanning);
   elements.scanButtonText.textContent = scanning ? "Scanning..." : "Run scan";
@@ -175,14 +177,20 @@ async function loadNetworks() {
   try {
     const data = await request("/api/interfaces");
     elements.networkSelect.replaceChildren();
-    const available = data.networks.filter((network) => network.scannable);
+    const available = data.networks.filter((network) => network.scannable).sort((left, right) => {
+      const rank = (network) => network.interface.startsWith("wl") ? 0 : (network.interface.startsWith("vm") ? 2 : 1);
+      return rank(left) - rank(right);
+    });
     if (!available.length) {
       elements.networkSelect.add(new Option("No scannable local network", ""));
       elements.networkSelect.disabled = true;
       elements.scanButton.disabled = true;
       return;
     }
-    available.forEach((network) => elements.networkSelect.add(new Option(`${network.cidr} / ${network.interface}`, network.cidr)));
+    available.forEach((network) => {
+      const medium = network.interface.startsWith("wl") ? "Wi-Fi" : (network.interface.startsWith("vm") ? "Virtual" : "Wired");
+      elements.networkSelect.add(new Option(`${network.cidr} / ${network.interface} / ${medium}`, network.cidr));
+    });
     elements.scanButton.disabled = false;
   } catch (error) {
     showToast(error.message, true);
@@ -192,23 +200,31 @@ async function loadNetworks() {
 async function refreshStatus() {
   try {
     const data = await request("/api/status");
-    state.devices = data.devices || [];
+    if (!data.scanning && state.awaitingScan && data.lastScanAt) {
+      state.awaitingScan = false;
+      state.hasCurrentResult = true;
+    }
+    state.devices = state.hasCurrentResult ? (data.devices || []) : [];
     setScanning(data.scanning, data.phase);
-    elements.lastScan.textContent = formatDate(data.lastScanAt);
+    elements.lastScan.textContent = state.hasCurrentResult ? formatDate(data.lastScanAt) : "No current scan";
     if (data.error) {
       elements.statusPulse.className = "pulse error";
       elements.statusTitle.textContent = "Scan failed";
       elements.statusDetail.textContent = data.error;
-    } else if (!data.scanning && data.lastScanAt) {
+    } else if (!data.scanning && state.hasCurrentResult && data.lastScanAt) {
       elements.statusPulse.className = "pulse";
       elements.statusPulse.style.background = "#32a879";
       elements.statusTitle.textContent = "Inventory current";
       elements.statusDetail.textContent = `${state.devices.length} online devices found on ${data.network} in ${data.durationSeconds} seconds.`;
+    } else if (!data.scanning) {
+      elements.statusTitle.textContent = "Ready for a real scan";
+      elements.statusDetail.textContent = "No retained or demonstration devices are displayed in this browser session.";
     }
     render();
     if (!data.scanning && state.pollTimer) {
       window.clearInterval(state.pollTimer);
       state.pollTimer = null;
+      scheduleLiveScan();
     }
   } catch (error) {
     showToast(error.message, true);
@@ -216,18 +232,34 @@ async function refreshStatus() {
 }
 
 async function runScan() {
+  if (state.scanning || !elements.networkSelect.value) return;
+  window.clearTimeout(state.liveTimer);
   try {
+    state.awaitingScan = true;
     setScanning(true);
     await request("/api/scan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ network: elements.networkSelect.value }) });
     state.pollTimer = window.setInterval(refreshStatus, 1200);
     await refreshStatus();
   } catch (error) {
+    state.awaitingScan = false;
     setScanning(false);
     showToast(error.message, true);
+    scheduleLiveScan();
   }
 }
 
+function scheduleLiveScan() {
+  window.clearTimeout(state.liveTimer);
+  if (!elements.liveToggle.checked || state.scanning) return;
+  state.liveTimer = window.setTimeout(runScan, 60_000);
+}
+
 elements.scanButton.addEventListener("click", runScan);
+elements.liveToggle.addEventListener("change", () => {
+  localStorage.setItem("netscope-live-monitor", String(elements.liveToggle.checked));
+  window.clearTimeout(state.liveTimer);
+  if (elements.liveToggle.checked) runScan();
+});
 elements.drawerClose.addEventListener("click", closeDrawer);
 elements.drawerBackdrop.addEventListener("click", closeDrawer);
 document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeDrawer(); });
@@ -241,4 +273,11 @@ document.querySelectorAll(".filter").forEach((button) => {
   });
 });
 
-Promise.all([loadNetworks(), refreshStatus()]);
+async function initialize() {
+  elements.liveToggle.checked = localStorage.getItem("netscope-live-monitor") === "true";
+  await loadNetworks();
+  await refreshStatus();
+  if (elements.liveToggle.checked) runScan();
+}
+
+initialize();

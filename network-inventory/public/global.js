@@ -4,6 +4,7 @@ if (fragmentToken) {
   history.replaceState(null, "", location.pathname);
 }
 const state = { token: fragmentToken || localStorage.getItem("netscope-workspace-token"), data: null, query: "", timer: null };
+document.documentElement.dataset.globalTheme = localStorage.getItem("netscope-global-theme") || "light";
 const $ = (selector) => document.querySelector(selector);
 const elements = {
   welcome: $("#welcomeView"), workspace: $("#workspaceView"), create: $("#createWorkspace"), forget: $("#forgetWorkspace"),
@@ -11,6 +12,7 @@ const elements = {
   agentCount: $("#agentCount"), deviceCount: $("#deviceCount"), serviceCount: $("#serviceCount"), statusCount: $("#statusCount"),
   agentList: $("#agentList"), deviceRows: $("#deviceRows"), deviceEmpty: $("#deviceEmpty"), eventList: $("#eventList"),
   search: $("#deviceSearch"), refreshTime: $("#refreshTime"), toast: $("#toast"),
+  statusText: $("#workspaceStatusText"), themeToggle: $("#globalThemeToggle"),
 };
 
 function text(tag, className, value) { const node = document.createElement(tag); if (className) node.className = className; node.textContent = value; return node; }
@@ -31,10 +33,18 @@ function commandFor(code) {
 }
 
 function showWorkspace(updatePath = false) {
+  document.body.classList.add("workspace-active");
   elements.welcome.hidden = true;
   document.querySelector(".principles").hidden = true;
   elements.workspace.hidden = false;
   if (updatePath && location.pathname !== "/inventory") history.pushState(null, "", "/inventory");
+}
+
+function openWorkspaceView(view, updatePath = true) {
+  const selected = ["inventory", "agents", "activity"].includes(view) ? view : "inventory";
+  document.querySelectorAll(".workspace-pane").forEach((pane) => { pane.hidden = pane.id !== `${selected}Pane`; });
+  document.querySelectorAll(".dash-nav-item").forEach((button) => button.classList.toggle("active", button.dataset.workspaceView === selected));
+  if (updatePath && location.pathname !== `/${selected}`) history.pushState(null, "", `/${selected}`);
 }
 
 async function createWorkspace() {
@@ -101,6 +111,7 @@ function renderEvents(data) {
 function render(data) {
   state.data = data; const services = data.devices.reduce((sum, device) => sum + (device.services || []).length, 0); const active = data.tasks.some((task) => ["pending", "running"].includes(task.status));
   elements.agentCount.textContent = data.agents.length; elements.deviceCount.textContent = data.devices.length; elements.serviceCount.textContent = services; elements.statusCount.textContent = active ? "Scanning" : "Idle";
+  elements.statusText.textContent = active ? "Agent scan in progress" : (data.agents.length ? "Workspace synchronized" : "Connect your first agent");
   if (data.pairCode) setPairCode(data.pairCode);
   elements.pairPanel.classList.toggle("compact", data.agents.length > 0); elements.refreshTime.textContent = `Updated ${new Date().toLocaleTimeString()}`;
   renderAgents(data); renderDevices(data); renderEvents(data);
@@ -116,5 +127,19 @@ elements.create.addEventListener("click", createWorkspace); elements.newPairCode
 elements.copy.addEventListener("click", async () => { await navigator.clipboard.writeText(elements.installCommand.textContent); toast("Install command copied."); });
 elements.search.addEventListener("input", (event) => { state.query = event.target.value.trim(); if (state.data) renderDevices(state.data); });
 elements.forget.addEventListener("click", () => { if (confirm("Forget this workspace token in this browser?")) { localStorage.removeItem("netscope-workspace-token"); location.href = "/global"; } });
+document.querySelectorAll(".dash-nav-item").forEach((button) => button.addEventListener("click", () => openWorkspaceView(button.dataset.workspaceView)));
+document.querySelectorAll("[data-open-view]").forEach((button) => button.addEventListener("click", () => openWorkspaceView(button.dataset.openView)));
+elements.themeToggle.addEventListener("click", () => {
+  const next = document.documentElement.dataset.globalTheme === "dark" ? "light" : "dark";
+  document.documentElement.dataset.globalTheme = next;
+  localStorage.setItem("netscope-global-theme", next);
+});
+window.addEventListener("popstate", () => openWorkspaceView(location.pathname.slice(1), false));
 
-if (state.token) { showWorkspace(true); refresh(); state.timer = setInterval(refresh, 3000); }
+if (state.token) {
+  const requestedView = ["inventory", "agents", "activity"].includes(location.pathname.slice(1)) ? location.pathname.slice(1) : "inventory";
+  showWorkspace(location.pathname === "/global" || location.pathname === "/");
+  openWorkspaceView(requestedView, false);
+  refresh();
+  state.timer = setInterval(refresh, 3000);
+}
