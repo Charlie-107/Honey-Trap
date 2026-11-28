@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IoT Security Auditor - Executive Dashboard</title>
+  <title>IoT Security Auditor - Dual-Mode Executive Dashboard</title>
   <link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
@@ -14,64 +14,102 @@
       <span class="brand-shield">🛡️</span>
       <div class="brand-text">
         <h2>IoT Auditor</h2>
-        <span class="subtext">Enterprise XAI Suite</span>
+        <span class="subtext">Dual-Mode XAI Suite</span>
       </div>
     </div>
 
     <nav class="sidebar-nav">
       <a href="#overview" class="nav-item active" data-tab="overview">
-        <span class="nav-icon">📊</span> Overview & Posture
+        <span class="nav-icon">📊</span> Dual-Mode Overview
       </a>
-      <a href="#devices" class="nav-item" data-tab="devices">
-        <span class="nav-icon">📡</span> Network IoT Devices
+      <a href="#website" class="nav-item" data-tab="website">
+        <span class="nav-icon">🌐</span> Mode 1: Website Scan
+      </a>
+      <a href="#iot" class="nav-item" data-tab="iot">
+        <span class="nav-icon">📡</span> Mode 2: IoT Anomaly Audit
+      </a>
+      <a href="#owasp" class="nav-item" data-tab="owasp">
+        <span class="nav-icon">🛡️</span> OWASP IoT Top 10
       </a>
       <a href="#xai" class="nav-item" data-tab="xai">
         <span class="nav-icon">💡</span> Explainable AI (SHAP)
       </a>
-      <a href="#headers" class="nav-item" data-tab="headers">
-        <span class="nav-icon">🔒</span> Transport & Headers
-      </a>
       <a href="#logs" class="nav-item" data-tab="logs">
-        <span class="nav-icon">📋</span> Audit Logs & Reports
+        <span class="nav-icon">📋</span> Audit Logs
       </a>
     </nav>
 
     <div class="engine-info-box">
       <div class="engine-badge-row">
         <span class="status-dot"></span>
-        <span class="engine-title">Wasm Engine Active</span>
+        <span class="engine-title">Rust / Wasm + SHAP</span>
       </div>
-      <p class="engine-sub">Manifest V3 Sandboxed Rust Subsystem</p>
+      <p class="engine-sub" id="dash-engine-sub">Manifest V3 Isolated Dual-Mode Engine</p>
     </div>
   </aside>
 
   <!-- Main Content Area -->
   <main class="main-content">
-    
-    <!-- Top Header -->
+
+    <!-- Top Header Bar -->
     <header class="top-bar">
       <div>
-        <h1 class="page-title" id="tab-title">Network Security Overview</h1>
-        <p class="page-subtitle">Real-time passive diagnostic and Explainable AI analysis of local IoT infrastructure.</p>
+        <h1 class="page-title" id="tab-title">Dual-Mode Security Overview</h1>
+        <p class="page-subtitle">Isolated Website Security Scanning and dynamic ThingsBoard IoT Anomaly Detection (OWASP IoT Top 10).</p>
       </div>
       <div class="top-actions">
-        <button class="btn btn-primary btn-run-audit-top" id="btn-refresh-network" title="Execute comprehensive 5-stage network audit">
-          <span class="audit-icon-spin" id="top-audit-icon">🛡️</span>
-          <span id="top-audit-btn-text">Run Audit</span>
+        <button type="button" class="btn btn-secondary" id="btn-dash-run-web" title="Run Mode 1 Website Security Scan on selected tab">
+          <span>🌐</span> Scan Website
         </button>
-        <button class="btn btn-secondary" id="btn-export-full-report">
-          <span>⤓</span> Export Audit Dossier
+        <button type="button" class="btn btn-primary btn-run-audit-top" id="btn-dash-run-iot" title="Run Mode 2 IoT Network Anomaly Audit">
+          <span class="audit-icon-spin" id="top-audit-icon">📡</span>
+          <span id="top-audit-btn-text">Run IoT Audit</span>
+        </button>
+        <button type="button" class="btn btn-secondary" id="btn-export-full-report">
+          <span>⤓</span> Export Report
         </button>
       </div>
     </header>
 
-    <!-- Global Prominent Run Audit Progress Bar (Active across all 5 tabs) -->
+    <!-- Persistent Dynamic Managing Server Bar -->
+    <section class="dash-managing-bar">
+      <div class="dash-managing-left">
+        <span class="dash-managing-label">IoT Managing Server:</span>
+        <span class="dash-managing-url" id="dash-managing-url-display">Not Configured</span>
+        <span class="dash-conn-badge status-not-configured" id="dash-conn-badge">
+          <span class="dash-conn-dot"></span>
+          <span id="dash-conn-text">Not Configured</span>
+        </span>
+      </div>
+      <div class="dash-managing-right">
+        <button type="button" class="btn btn-secondary btn-sm" id="btn-dash-change-url">Change URL</button>
+      </div>
+    </section>
+
+    <!-- Inline Managing URL Settings Panel -->
+    <section class="dash-url-settings" id="dash-url-settings-panel" style="display: none;">
+      <div class="dash-url-settings-row">
+        <div class="form-group flex-2">
+          <label for="dash-input-managing-url" class="form-label">Managing Website URL (http:// or https://)</label>
+          <input type="url" id="dash-input-managing-url" class="form-input" placeholder="https://your-iot-server.example:8080" autocomplete="off">
+        </div>
+        <div class="dash-url-btn-group">
+          <button type="button" class="btn btn-primary btn-sm" id="btn-dash-save-url">Save &amp; Connect</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-dash-test-url">Test Health</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-dash-clear-url">Clear</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-dash-cancel-url">Cancel</button>
+        </div>
+      </div>
+      <div id="dash-url-feedback" class="dash-feedback"></div>
+    </section>
+
+    <!-- Global Progress Bar -->
     <div id="dash-global-progress" class="global-audit-progress" style="display: none;">
       <div class="global-progress-inner">
         <div class="global-progress-text-row">
           <div class="global-status-wrap">
             <span class="pulse-audit-indicator"></span>
-            <strong id="global-audit-status">Executing NIST &amp; OWASP 5-Stage Security Audit...</strong>
+            <strong id="global-audit-status">Running security audit...</strong>
           </div>
           <span id="global-audit-percent" class="global-audit-percent">0%</span>
         </div>
@@ -81,441 +119,416 @@
       </div>
     </div>
 
-    <!-- Tab 1: Overview & Posture -->
+    <!-- =================================================================== -->
+    <!-- TAB 1: DUAL-MODE OVERVIEW HUB                                       -->
+    <!-- =================================================================== -->
     <section id="tab-overview" class="tab-pane active">
-      <!-- High-Level Interactive Metric Cards -->
-      <div class="metrics-grid">
-        <div class="metric-card metric-score-card card-interactive" id="card-metric-score" title="Click for Detailed Network Risk Score Breakdown">
-          <div class="metric-card-top-row">
-            <span class="metric-label">Network Risk Score</span>
-            <span class="card-drilldown-hint">Details ↗</span>
-          </div>
-          <div class="metric-score-flex">
+      <div class="dual-overview-grid">
+        <!-- Mode 1 Summary Card -->
+        <div class="card-panel mode-overview-card">
+          <div class="panel-header-flex">
+            <div>
+              <span class="mode-tag mode-tag-web">Mode 1 • Isolated Active-Tab Audit</span>
+              <h3 class="panel-heading" style="margin-top:6px;">🌐 Website Security Scan</h3>
+            </div>
             <div class="dash-circle-wrap">
               <svg class="dash-ring-svg" viewBox="0 0 76 76">
                 <circle class="dash-ring-bg" cx="38" cy="38" r="32" />
-                <circle class="dash-ring-fill" id="dash-score-ring" cx="38" cy="38" r="32" />
+                <circle class="dash-ring-fill" id="ov-web-ring" cx="38" cy="38" r="32" />
               </svg>
               <div class="dash-circle-center">
-                <span class="metric-val text-critical" id="metric-score">48</span>
+                <span class="metric-val" id="ov-web-score">--</span>
                 <span class="metric-max">/100</span>
               </div>
             </div>
-            <div class="dash-score-meta">
-              <span class="metric-sub text-critical" id="metric-score-status">⚠️ High Risk Posture</span>
-              <span class="dash-score-hint">Click for scoring rubric</span>
-            </div>
           </div>
-        </div>
 
-        <div class="metric-card card-interactive" id="card-metric-devices" title="Click for Connected IoT Devices Roster">
-          <div class="metric-card-top-row">
-            <span class="metric-label">Audited IoT Devices</span>
-            <span class="card-drilldown-hint">Details ↗</span>
-          </div>
-          <div class="metric-val-row">
-            <span class="metric-val" id="metric-device-count">7</span>
-            <span class="metric-unit">Active</span>
-          </div>
-          <span class="metric-sub text-warning" id="metric-devices-sub">Click to inspect device inventory</span>
-        </div>
-
-        <div class="metric-card card-interactive" id="card-metric-flaws" title="Click for Critical & High Vulnerabilities Breakdown">
-          <div class="metric-card-top-row">
-            <span class="metric-label">Critical / High Flaws</span>
-            <span class="card-drilldown-hint">Details ↗</span>
-          </div>
-          <div class="metric-val-row">
-            <span class="metric-val text-critical" id="metric-flaw-count">5</span>
-            <span class="metric-unit">Vulnerabilities</span>
-          </div>
-          <span class="metric-sub" id="metric-flaws-sub">DOM XSS &amp; Missing CSRF</span>
-        </div>
-
-        <div class="metric-card card-interactive" id="card-metric-transport" title="Click for Transport & Defensive Headers Matrix">
-          <div class="metric-card-top-row">
-            <span class="metric-label">Transport Defense</span>
-            <span class="card-drilldown-hint">Details ↗</span>
-          </div>
-          <div class="metric-val-row">
-            <span class="metric-val text-warning" id="metric-transport-pct">28%</span>
-            <span class="metric-unit">Enforced</span>
-          </div>
-          <span class="metric-sub text-critical" id="metric-transport-sub">Click for compliance details</span>
-        </div>
-      </div>
-
-      <!-- Overview Charts / Split Section -->
-      <div class="overview-grid">
-        <!-- Live Vulnerability Distribution -->
-        <div class="card-panel">
-          <h3 class="panel-heading">Vulnerability Severity Breakdown</h3>
-          <div class="severity-bars">
-            <div class="sev-bar-row">
-              <span class="sev-name">Critical (DOM XSS / RCE)</span>
-              <div class="bar-track"><div class="bar-fill bg-critical" style="width: 45%;"></div></div>
-              <span class="sev-num">2</span>
-            </div>
-            <div class="sev-bar-row">
-              <span class="sev-name">High (Missing Anti-CSRF)</span>
-              <div class="bar-track"><div class="bar-fill bg-high" style="width: 60%;"></div></div>
-              <span class="sev-num">3</span>
-            </div>
-            <div class="sev-bar-row">
-              <span class="sev-name">Medium (Insecure Headers / CSP)</span>
-              <div class="bar-track"><div class="bar-fill bg-medium" style="width: 80%;"></div></div>
-              <span class="sev-num">4</span>
-            </div>
-            <div class="sev-bar-row">
-              <span class="sev-name">Low (Cookie Flag Omission)</span>
-              <div class="bar-track"><div class="bar-fill bg-low" style="width: 40%;"></div></div>
-              <span class="sev-num">2</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Active Target Quick Status -->
-        <div class="card-panel">
-          <h3 class="panel-heading">Active Browser Target Inspection</h3>
           <div class="target-inspect-box">
             <div class="inspect-field">
-              <span class="inspect-key">Active URL:</span>
-              <span class="inspect-val code" id="inspect-url">http://192.168.1.1/admin/dashboard</span>
+              <span class="inspect-key">Target URL</span>
+              <span class="inspect-val code" id="ov-web-url">Not scanned yet</span>
             </div>
             <div class="inspect-field">
-              <span class="inspect-key">Device Classification:</span>
-              <span class="inspect-val badge badge-blue" id="inspect-device-type">Smart Gateway / Router</span>
+              <span class="inspect-key">Posture &amp; Findings</span>
+              <span class="inspect-val" id="ov-web-summary">Run Mode 1 to audit DOM, headers, cookies, and scripts.</span>
+            </div>
+          </div>
+
+          <div class="mode-overview-actions">
+            <button type="button" class="btn btn-primary btn-sm" id="btn-ov-run-web">Run Website Scan</button>
+            <button type="button" class="btn btn-secondary btn-sm" data-jump-tab="website">Open Website View ↗</button>
+          </div>
+        </div>
+
+        <!-- Mode 2 Summary Card -->
+        <div class="card-panel mode-overview-card">
+          <div class="panel-header-flex">
+            <div>
+              <span class="mode-tag mode-tag-iot">Mode 2 • OWASP IoT Top 10 + SHAP</span>
+              <h3 class="panel-heading" style="margin-top:6px;">📡 IoT Network Anomaly Audit</h3>
+            </div>
+            <div class="dash-circle-wrap">
+              <svg class="dash-ring-svg" viewBox="0 0 76 76">
+                <circle class="dash-ring-bg" cx="38" cy="38" r="32" />
+                <circle class="dash-ring-fill" id="ov-iot-ring" cx="38" cy="38" r="32" />
+              </svg>
+              <div class="dash-circle-center">
+                <span class="metric-val" id="ov-iot-score">--</span>
+                <span class="metric-max">/100</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="target-inspect-box">
+            <div class="inspect-field">
+              <span class="inspect-key">Managing Server</span>
+              <span class="inspect-val code" id="ov-iot-server">Not Configured</span>
             </div>
             <div class="inspect-field">
-              <span class="inspect-key">Sandboxed Analysis Engine:</span>
-              <span class="inspect-val">WebAssembly & Rust 5-Stage Scanner</span>
+              <span class="inspect-key">Devices Audited &amp; Anomalies</span>
+              <span class="inspect-val" id="ov-iot-summary">Configure a managing server URL and run Mode 2 to audit IoT telemetry.</span>
             </div>
-            <div class="inspect-field">
-              <span class="inspect-key">Top Identified Threat:</span>
-              <span class="inspect-val text-critical">Missing CSRF Token on System Reboot POST form</span>
-            </div>
+          </div>
+
+          <div class="mode-overview-actions">
+            <button type="button" class="btn btn-primary btn-sm" id="btn-ov-run-iot">Run IoT Anomaly Audit</button>
+            <button type="button" class="btn btn-secondary btn-sm" data-jump-tab="iot">Open IoT Audit View ↗</button>
           </div>
         </div>
       </div>
 
-      <!-- 5-Stage Network Audit Pipeline Overview -->
-      <div class="card-panel" style="margin-top: 24px;">
+      <!-- OWASP IoT Top 10 Quick Snapshot -->
+      <div class="card-panel">
         <div class="panel-header-flex">
           <div>
-            <h3 class="panel-heading">🛡️ 5-Stage IoT Security Audit Pipeline</h3>
-            <p class="panel-sub" style="margin-bottom:0;">Multi-layered defense-in-depth framework executed across all local subnet IoT devices.</p>
+            <h3 class="panel-heading">🛡️ OWASP IoT Top 10 Coverage Snapshot</h3>
+            <p class="panel-sub" style="margin-bottom:0;">Real-time status across all 10 OWASP IoT Top 10 threat categories from the latest IoT Anomaly Audit.</p>
           </div>
-          <span class="badge badge-blue">NIST SP 800-213 & OWASP IoT Standard</span>
+          <button type="button" class="btn btn-secondary btn-sm" data-jump-tab="owasp">Full OWASP Matrix ↗</button>
+        </div>
+        <div class="owasp-mini-grid" id="ov-owasp-mini-grid"></div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 2: MODE 1 — ISOLATED WEBSITE SECURITY SCAN                      -->
+    <!-- =================================================================== -->
+    <section id="tab-website" class="tab-pane">
+      <div class="card-panel">
+        <div class="panel-header-flex">
+          <div>
+            <h3 class="panel-heading">🌐 Mode 1: Active Website Security Scanner</h3>
+            <p class="panel-sub" style="margin-bottom:0;">Strictly isolated from IoT auditing. Inspects DOM XSS sinks, CSRF tokens, headers, cookies, and scripts.</p>
+          </div>
+          <div class="top-actions">
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-web-refresh-tabs">↻ Refresh Tabs</button>
+            <button type="button" class="btn btn-primary btn-sm" id="btn-web-tab-scan">🌐 Scan Selected Tab</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-dash-export-web" disabled>⤓ Export Website Report</button>
+          </div>
         </div>
 
-        <div class="stages-summary-grid">
-          <div class="stage-summary-card">
-            <div class="stage-header">
-              <span class="stage-num-badge">1</span>
-              <div>
-                <h4>Attack Surface Discovery</h4>
-                <span class="stage-tool-tag">nmap -sS -p- -T4</span>
-              </div>
-            </div>
-            <p class="stage-desc">Maps all 65,535 ports to uncover unlisted, legacy, or rogue listening services.</p>
+        <div class="scanner-form-row" style="margin-top:12px;">
+          <div class="form-group flex-2">
+            <label for="dash-web-tab-select" class="form-label">Target Browser Tab (http:// or https://)</label>
+            <select id="dash-web-tab-select" class="form-input form-select"></select>
           </div>
+        </div>
+        <div id="dash-web-error" class="dash-feedback error" style="margin-top:8px;"></div>
+      </div>
 
-          <div class="stage-summary-card">
-            <div class="stage-header">
-              <span class="stage-num-badge">2</span>
-              <div>
-                <h4>Fingerprinting & Banners</h4>
-                <span class="stage-tool-tag">nmap -sV -O --version-all</span>
-              </div>
-            </div>
-            <p class="stage-desc">Identifies exact daemon software versions (e.g. OpenSSH, Boa) to match against CVE databases.</p>
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <span class="metric-label">Website Posture Score</span>
+          <div class="metric-val-row">
+            <span class="metric-val" id="web-tab-score">--</span>
+            <span class="metric-unit">/ 100</span>
           </div>
+          <span class="metric-sub" id="web-tab-rating">Not Scanned</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Critical / High</span>
+          <div class="metric-val-row">
+            <span class="metric-val text-critical" id="web-tab-crit-high">0</span>
+            <span class="metric-unit">Findings</span>
+          </div>
+          <span class="metric-sub" id="web-tab-med-low">0 Medium / 0 Low</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Scripts Audited</span>
+          <div class="metric-val-row">
+            <span class="metric-val" id="web-tab-scripts">0</span>
+            <span class="metric-unit">Total</span>
+          </div>
+          <span class="metric-sub" id="web-tab-scripts-sub">0 inline without nonce</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">JS Cookie Exposure</span>
+          <div class="metric-val-row">
+            <span class="metric-val" id="web-tab-cookies">0</span>
+            <span class="metric-unit">Cookies</span>
+          </div>
+          <span class="metric-sub" id="web-tab-cookies-sub">0 sensitive exposed</span>
+        </div>
+      </div>
 
-          <div class="stage-summary-card">
-            <div class="stage-header">
-              <span class="stage-num-badge">3</span>
-              <div>
-                <h4>Vulnerability Assessment</h4>
-                <span class="stage-tool-tag">nmap --script "vuln and safe"</span>
-              </div>
-            </div>
-            <p class="stage-desc">Checks for known CVEs, SSL/TLS misconfigurations, default credentials, and unpatched flaws.</p>
-          </div>
+      <div class="overview-grid">
+        <div class="card-panel">
+          <h3 class="panel-heading">Transport &amp; Defensive Headers</h3>
+          <div id="dash-web-headers-list" class="headers-checklist"></div>
+        </div>
 
-          <div class="stage-summary-card">
-            <div class="stage-header">
-              <span class="stage-num-badge">4</span>
-              <div>
-                <h4>Host Hardening</h4>
-                <span class="stage-tool-tag">Lynis / OpenSCAP</span>
-              </div>
+        <div class="card-panel">
+          <div class="panel-header-flex">
+            <h3 class="panel-heading">Detected Website Findings</h3>
+            <div class="filter-group" id="dash-web-filter-group">
+              <button type="button" class="filter-btn active" data-filter="all">All</button>
+              <button type="button" class="filter-btn" data-filter="critical">Critical</button>
+              <button type="button" class="filter-btn" data-filter="high">High</button>
+              <button type="button" class="filter-btn" data-filter="medium">Medium</button>
             </div>
-            <p class="stage-desc">Assesses kernel hardening, file permissions, firewall status, authentication & CIS compliance.</p>
           </div>
-
-          <div class="stage-summary-card">
-            <div class="stage-header">
-              <span class="stage-num-badge">5</span>
-              <div>
-                <h4>Application Security</h4>
-                <span class="stage-tool-tag">OWASP ZAP / Nikto</span>
-              </div>
-            </div>
-            <p class="stage-desc">Tests web interfaces for missing defensive headers (CSP, HSTS), XSS sinks, and directory exposure.</p>
-          </div>
+          <div id="dash-web-findings-list" class="findings-stack"></div>
         </div>
       </div>
     </section>
 
-    <!-- Tab 2: Connected IoT Devices List -->
-    <section id="tab-devices" class="tab-pane">
-      <!-- Scanner Controls & Add Device Toolbar -->
-      <div class="scanner-controls-grid">
-        <!-- Subnet Scanner Panel -->
-        <div class="card-panel scanner-panel">
-          <div class="panel-header-flex" style="margin-bottom:12px;">
-            <div>
-              <h3 class="panel-heading">📡 Rust Nmap / ARP Network Scanner</h3>
-              <p class="panel-sub" style="margin-bottom:0;">Scan the local network subnet to discover connected IoT devices, open ports, and MAC addresses.</p>
-            </div>
-            <div id="rust-engine-badge" class="engine-pill online">
-              <span class="status-dot"></span>
-              <span id="rust-status-label">Rust Engine Active (Port 5000)</span>
-            </div>
-          </div>
+    <!-- =================================================================== -->
+    <!-- TAB 3: MODE 2 — DYNAMIC IOT ANOMALY AUDIT                           -->
+    <!-- =================================================================== -->
+    <section id="tab-iot" class="tab-pane">
+      <!-- Unconfigured or Auth Card -->
+      <div id="dash-iot-unconfigured" class="card-panel warn-panel" style="display: none;">
+        <h3 class="panel-heading">⚠️ No IoT Managing Server Configured</h3>
+        <p class="panel-sub" style="margin-bottom:10px;">Set your ThingsBoard or IoT server URL using the <strong>Change URL</strong> button above to fetch live devices and telemetry.</p>
+        <button type="button" class="btn btn-primary btn-sm" id="btn-dash-open-url-from-iot">Configure Managing Server URL</button>
+      </div>
 
-          <div class="scanner-form-row">
-            <div class="form-group flex-2">
-              <label for="scanner-subnet" class="form-label">Subnet Range</label>
-              <input type="text" id="scanner-subnet" value="192.168.1.0/24" placeholder="192.168.1.0/24" class="form-input">
-            </div>
-            <div class="form-group flex-2">
-              <label for="scanner-mode" class="form-label">Scan Strategy</label>
-              <select id="scanner-mode" class="form-input form-select">
-                <option value="auto">Rust Fast Socket &amp; ARP Discovery (Recommended)</option>
-                <option value="nmap">Rust Nmap Engine (-sT Deep Ports Scan)</option>
-                <option value="browser">In-Browser HTTP/Port Probe (Fallback)</option>
-              </select>
-            </div>
-            <div class="form-group flex-2 form-btn-group-dual">
-              <button class="btn btn-secondary btn-scan btn-scan-endpoints" id="btn-scan-endpoints" title="Scan local network to discover connected devices and endpoints">
-                <span id="endpoint-btn-icon">📡</span>
-                <span id="endpoint-btn-text">Scan for Endpoints</span>
-              </button>
-              <button class="btn btn-primary btn-scan btn-tab-audit" id="btn-scan-network" title="Execute comprehensive 5-stage vulnerability audit on discovered devices">
-                <span id="scan-btn-icon">🛡️</span>
-                <span id="scan-btn-text">Run Audit</span>
-              </button>
-            </div>
+      <div id="dash-tb-login-card" class="card-panel" style="display: none;">
+        <div class="panel-header-flex">
+          <div>
+            <h3 class="panel-heading">🔐 ThingsBoard Authentication Required</h3>
+            <p class="panel-sub" style="margin-bottom:0;">No active <code>jwt_token</code> found in an open tab. Sign in via <code>/api/auth/login</code>:</p>
           </div>
-
-          <!-- Live Scanning Progress / Status Output -->
-          <div id="scan-progress-container" class="scan-progress-box" style="display: none;">
-            <div class="progress-bar-track">
-              <div id="scan-progress-fill" class="progress-bar-fill" style="width: 0%;"></div>
-            </div>
-            <div class="progress-status-row">
-              <span id="scan-status-text" class="scan-status-text">Initializing Rust scanner...</span>
-              <span id="scan-percent-text" class="scan-percent-text">0%</span>
-            </div>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-dash-close-login">Dismiss</button>
+        </div>
+        <div class="scanner-form-row">
+          <div class="form-group flex-2">
+            <label for="dash-tb-username" class="form-label">Username / Email</label>
+            <input type="text" id="dash-tb-username" class="form-input" placeholder="tenant@example.com">
+          </div>
+          <div class="form-group flex-2">
+            <label for="dash-tb-password" class="form-label">Password</label>
+            <input type="password" id="dash-tb-password" class="form-input" placeholder="Password">
+          </div>
+          <div class="form-group flex-1 form-btn-group">
+            <button type="button" class="btn btn-primary btn-scan" id="btn-dash-tb-login">Sign In &amp; Audit</button>
           </div>
         </div>
+        <div id="dash-tb-login-error" class="dash-feedback error" style="margin-top:8px;"></div>
+      </div>
 
-        <!-- Add Device Target Search Panel -->
-        <div class="card-panel add-device-panel">
-          <h3 class="panel-heading">🔍 Add Device / Search Target IP</h3>
-          <p class="panel-sub" style="margin-bottom:12px;">Probe a specific IP address directly to analyze its headers, ports, and vulnerabilities.</p>
-
-          <div class="add-device-form-row">
-            <div class="form-group flex-2">
-              <label for="add-device-ip" class="form-label">Device Target IP</label>
-              <input type="text" id="add-device-ip" placeholder="e.g. 192.168.1.1 or 192.168.1.50" class="form-input">
-            </div>
-            <div class="form-group flex-2">
-              <label for="add-device-name" class="form-label">Custom Name (Optional)</label>
-              <input type="text" id="add-device-name" placeholder="Auto-inferred if blank" class="form-input">
-            </div>
-            <div class="form-group flex-1 form-btn-group">
-              <button class="btn btn-secondary btn-scan" id="btn-add-device">
-                <span>➕</span>
-                <span id="add-btn-text">Scan & Add IP</span>
-              </button>
-            </div>
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <span class="metric-label">IoT Fleet Score</span>
+          <div class="metric-val-row">
+            <span class="metric-val" id="iot-tab-score">--</span>
+            <span class="metric-unit">/ 100</span>
           </div>
+          <span class="metric-sub" id="iot-tab-rating">Not Audited</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Devices Audited</span>
+          <div class="metric-val-row">
+            <span class="metric-val" id="iot-tab-device-count">0</span>
+            <span class="metric-unit">Nodes</span>
+          </div>
+          <span class="metric-sub" id="iot-tab-server-sub">No active audit</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">OWASP Critical / High</span>
+          <div class="metric-val-row">
+            <span class="metric-val text-critical" id="iot-tab-crit-high">0</span>
+            <span class="metric-unit">Anomalies</span>
+          </div>
+          <span class="metric-sub" id="iot-tab-med-low">0 Medium / 0 Low</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Evaluation Engine</span>
+          <div class="metric-val-row">
+            <span class="metric-val" style="font-size:16px;" id="iot-tab-engine">Wasm / SHAP</span>
+          </div>
+          <span class="metric-sub">OWASP IoT Top 10 Pipeline</span>
         </div>
       </div>
 
-      <!-- Device Inventory Table -->
+      <!-- Audited IoT Device Inventory -->
       <div class="table-container card-panel">
         <div class="panel-header-flex">
           <div>
-            <h3 class="panel-heading">Connected Local IoT Inventory</h3>
-            <p class="panel-sub">Discovered IoT gateways, IP cameras, environmental sensors, and smart bridges on the active subnet.</p>
+            <h3 class="panel-heading">Audited IoT Devices Inventory</h3>
+            <p class="panel-sub" style="margin-bottom:0;">Devices pulled from the configured managing server with telemetry &amp; OWASP IoT Top 10 scores.</p>
           </div>
           <div class="table-toolbar">
-            <div class="search-box">
-              <input type="text" id="device-search" placeholder="Search by IP, MAC, or Device Name..." class="form-input">
-            </div>
-            <button class="btn btn-secondary" id="btn-reset-demo" title="Reset Demo Data">
-              <span>🔄</span> Reset
-            </button>
-            <button class="btn btn-secondary" id="btn-clear-devices" title="Clear Device Inventory">
-              <span>🗑️</span> Clear
-            </button>
+            <input type="text" id="device-search" placeholder="Search by Name, IP, MAC, or Type..." class="form-input">
+            <button type="button" class="btn btn-primary btn-sm" id="btn-iot-tab-run">📡 Run IoT Audit</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-dash-export-iot" disabled>⤓ Export IoT Report</button>
           </div>
         </div>
+        <div id="dash-iot-error" class="dash-feedback error" style="margin-bottom:10px;"></div>
 
         <table class="data-table" id="devices-table">
           <thead>
             <tr>
               <th>Status</th>
               <th>Device Name</th>
+              <th>Type</th>
               <th>IP Address</th>
               <th>MAC Address</th>
-              <th>Category</th>
-              <th>Open Web Ports</th>
+              <th>Telemetry Keys</th>
               <th>Risk Score</th>
-              <th>Identified Flaws</th>
+              <th>OWASP Categories</th>
               <th>Actions</th>
             </tr>
           </thead>
-          <tbody id="devices-tbody">
-            <!-- Dynamically injected via dashboard.js -->
-          </tbody>
+          <tbody id="devices-tbody"></tbody>
         </table>
+      </div>
+
+      <!-- IoT Findings -->
+      <div class="card-panel">
+        <div class="panel-header-flex">
+          <h3 class="panel-heading">Detected OWASP IoT Top 10 Findings &amp; Telemetry Anomalies</h3>
+          <div class="filter-group" id="dash-iot-filter-group">
+            <button type="button" class="filter-btn active" data-filter="all">All</button>
+            <button type="button" class="filter-btn" data-filter="critical">Critical</button>
+            <button type="button" class="filter-btn" data-filter="high">High</button>
+            <button type="button" class="filter-btn" data-filter="medium">Medium</button>
+          </div>
+        </div>
+        <div id="dash-iot-findings-list" class="findings-stack"></div>
+      </div>
+
+      <!-- Optional Secondary Local Rust Subnet Scanner -->
+      <details class="card-panel">
+        <summary class="panel-heading" style="cursor:pointer;">🔧 Optional: Local Rust Nmap / ARP Subnet Scanner</summary>
+        <p class="panel-sub" style="margin-top:6px;">Optionally connect to your local Rust scanner daemon (run <code>./start_scanner.sh</code>) by entering its URL and target CIDR.</p>
+        <div class="scanner-form-row">
+          <div class="form-group flex-2">
+            <label for="rust-daemon-url" class="form-label">Rust Scanner Daemon URL (Optional)</label>
+            <input type="url" id="rust-daemon-url" class="form-input" placeholder="http://your-local-scanner-host:5000">
+          </div>
+          <div class="form-group flex-2">
+            <label for="scanner-subnet" class="form-label">Subnet CIDR</label>
+            <input type="text" id="scanner-subnet" class="form-input" placeholder="Enter CIDR range">
+          </div>
+          <div class="form-group flex-1 form-btn-group">
+            <button type="button" class="btn btn-secondary btn-scan" id="btn-scan-network">Run Local Scan</button>
+          </div>
+        </div>
+        <div id="rust-local-status" class="dash-feedback" style="margin-top:8px;"></div>
+      </details>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 4: OWASP IOT TOP 10 COMPLIANCE MATRIX                           -->
+    <!-- =================================================================== -->
+    <section id="tab-owasp" class="tab-pane">
+      <div class="card-panel">
+        <div class="panel-header-flex">
+          <div>
+            <h3 class="panel-heading">🛡️ OWASP IoT Top 10 Threat Model Evaluation (I1 – I10)</h3>
+            <p class="panel-sub" style="margin-bottom:0;">Comprehensive evaluation of device attributes, ecosystem transport, and timeseries telemetry anomalies.</p>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" id="btn-owasp-run-iot">📡 Re-Evaluate Fleet</button>
+        </div>
+
+        <div class="owasp-matrix-grid" id="dash-owasp-matrix-grid"></div>
       </div>
     </section>
 
-    <!-- Tab 3: Explainable AI (SHAP) -->
+    <!-- =================================================================== -->
+    <!-- TAB 5: EXPLAINABLE AI (SHAP)                                        -->
+    <!-- =================================================================== -->
     <section id="tab-xai" class="tab-pane">
       <div class="card-panel">
         <h3 class="panel-heading">SHAP (Shapley Additive exPlanations) Feature Attributions</h3>
-        <p class="panel-sub">Mathematical quantification of feature influence on security vulnerability classifications calculated in-browser.</p>
-        
-        <div class="xai-models-grid" id="xai-container">
-          <!-- Dynamically populated -->
-        </div>
+        <p class="panel-sub">Dynamic feature weight explanations derived from Mode 1 (Website Security) and Mode 2 (OWASP IoT Top 10) detections.</p>
+        <div class="xai-models-grid" id="xai-container"></div>
       </div>
     </section>
 
-    <!-- Tab 4: Transport & Security Headers -->
-    <section id="tab-headers" class="tab-pane">
-      <div class="card-panel">
-        <h3 class="panel-heading">Network Transport & Defensive Header Compliance Matrix</h3>
-        <p class="panel-sub">Evaluation against OWASP IoT Top 10 and NIST SP 800-213 guidelines for smart devices.</p>
-        
-        <table class="data-table" id="headers-table">
-          <thead>
-            <tr>
-              <th>Device</th>
-              <th>Endpoint</th>
-              <th>HTTPS / TLS</th>
-              <th>HSTS Header</th>
-              <th>Content-Security-Policy</th>
-              <th>X-Frame-Options</th>
-              <th>Cookie Security Flags</th>
-            </tr>
-          </thead>
-          <tbody id="headers-tbody">
-            <!-- Dynamically injected via dashboard.js -->
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- Tab 5: Audit Logs -->
+    <!-- =================================================================== -->
+    <!-- TAB 6: AUDIT LOGS                                                   -->
+    <!-- =================================================================== -->
     <section id="tab-logs" class="tab-pane">
       <div class="card-panel">
         <div class="panel-header-flex">
           <div>
-            <h3 class="panel-heading">Real-Time Security Event Audit Stream</h3>
-            <p class="panel-sub">Chronological recording of DOM mutations, passive header checks, and risk transitions.</p>
+            <h3 class="panel-heading">Real-Time Dual-Mode Security Audit Stream</h3>
+            <p class="panel-sub" style="margin-bottom:0;">Chronological events across Mode 1 Website Scans, Mode 2 IoT Audits, and Server Configuration changes.</p>
           </div>
-          <button class="btn btn-secondary" id="btn-clear-logs">Clear Logs</button>
+          <button type="button" class="btn btn-secondary" id="btn-clear-logs">Clear Logs</button>
         </div>
-        
-        <div class="log-stream" id="log-stream-container">
-          <!-- Logs injected -->
-        </div>
+        <div class="log-stream" id="log-stream-container"></div>
       </div>
     </section>
 
   </main>
 
-  <!-- 5-Stage Security Audit Modal -->
+  <!-- Device Detail Modal -->
   <div id="audit-modal" class="modal-overlay" style="display: none;">
     <div class="modal-card">
       <div class="modal-header">
         <div class="modal-header-left">
-          <span class="modal-icon">🛡️</span>
+          <span class="modal-icon">📡</span>
           <div>
             <h2 id="modal-device-name" class="modal-title">Device Security Audit</h2>
             <div class="modal-meta-row">
-              <span id="modal-device-ip" class="code-cell">192.168.1.1</span>
-              <span id="modal-device-mac" class="code-cell" style="color: #94a3b8;">00:00:00:00:00:00</span>
-              <span id="modal-device-cat" class="badge badge-blue">Gateway</span>
+              <span id="modal-device-ip" class="code-cell">--</span>
+              <span id="modal-device-mac" class="code-cell" style="color: #94a3b8;">--</span>
+              <span id="modal-device-cat" class="badge badge-blue">IoT</span>
             </div>
           </div>
         </div>
         <div class="modal-header-right">
           <div class="modal-score-box">
-            <span class="score-label">Hardening Posture</span>
-            <div class="modal-circle-wrap">
-              <svg class="modal-ring-svg" viewBox="0 0 60 60">
-                <circle class="modal-ring-bg" cx="30" cy="30" r="24" />
-                <circle class="modal-ring-fill" id="modal-score-ring" cx="30" cy="30" r="24" />
-              </svg>
-              <div class="modal-circle-center">
-                <span id="modal-device-score" class="modal-score-val text-warning">65</span>
-                <span class="score-max">/100</span>
-              </div>
-            </div>
+            <span class="score-label">Security Posture</span>
+            <span id="modal-device-score" class="modal-score-val">--</span>
           </div>
-          <button class="modal-close-btn" id="btn-close-modal">✕</button>
+          <button type="button" class="modal-close-btn" id="btn-close-modal">✕</button>
         </div>
       </div>
-
       <div class="modal-body">
-        <div class="modal-section-title">
-          <span>📋 5-Stage Comprehensive Network & Device Audit</span>
-          <span class="modal-sub">NIST SP 800-213 & OWASP IoT Audit Verification</span>
-        </div>
-
-        <!-- 5-Stage Cards Container -->
-        <div class="audit-stages-list" id="modal-stages-list">
-          <!-- Dynamically populated via dashboard.js -->
-        </div>
+        <div id="modal-stages-list" class="audit-stages-list"></div>
       </div>
-
       <div class="modal-footer">
-        <button class="btn btn-secondary" id="btn-modal-re-audit">
-          <span>🔄</span> Re-Audit (All 5 Stages)
-        </button>
-        <button class="btn btn-primary" id="btn-modal-done">
-          Done
-        </button>
+        <button type="button" class="btn btn-primary" id="btn-modal-done">Done</button>
       </div>
     </div>
   </div>
 
-  <!-- Export Dossier Format Selection Modal -->
+  <!-- Mode-Specific Export Modal -->
   <div id="dash-export-modal" class="modal-overlay" style="display: none;">
     <div class="modal-card dash-export-card">
       <div class="modal-header">
         <div class="modal-header-left">
           <span class="modal-icon">⤓</span>
           <div>
-            <h2 class="modal-title">Export Security Audit Dossier</h2>
-            <p class="modal-sub" style="font-size:12px; color:var(--text-secondary);">Select file format to download executive report:</p>
+            <h2 class="modal-title">Export Audit Report</h2>
+            <p class="modal-sub" style="font-size:12px; color:var(--text-secondary);">Choose which mode's isolated report and file format to download:</p>
           </div>
         </div>
-        <button class="modal-close-btn" id="btn-close-dash-export">✕</button>
+        <button type="button" class="modal-close-btn" id="btn-close-dash-export">✕</button>
       </div>
 
       <div class="modal-body">
+        <div class="export-mode-toggle" id="dash-export-mode-toggle">
+          <button type="button" class="btn btn-secondary btn-sm active" data-export-mode="iot">📡 Mode 2: IoT Anomaly Audit (OWASP)</button>
+          <button type="button" class="btn btn-secondary btn-sm" data-export-mode="website">🌐 Mode 1: Website Security Scan</button>
+        </div>
+        <div id="dash-export-mode-note" class="dash-feedback" style="margin: 10px 0;"></div>
+
         <div class="dash-export-grid">
-          
-          <!-- PDF Option -->
           <div class="dash-export-option-card" data-format="pdf">
             <div class="dash-opt-header">
               <span class="dash-opt-icon pdf">📄</span>
@@ -524,13 +537,10 @@
                 <span class="badge badge-critical" style="font-size:10px;">.PDF</span>
               </div>
             </div>
-            <p class="dash-opt-desc">Executive-ready formatted dossier including high-level posture metrics, vulnerability breakdown, device inventory tables, and SHAP Explainable AI attribution weights.</p>
-            <button class="btn btn-primary btn-dash-download" data-format="pdf">
-              <span>⤓</span> Download PDF (.pdf)
-            </button>
+            <p class="dash-opt-desc">Formatted report starting with the mode-specific metadata header, posture score, and SHAP findings.</p>
+            <button type="button" class="btn btn-primary btn-dash-download" data-format="pdf">⤓ Download PDF</button>
           </div>
 
-          <!-- DOCX Option -->
           <div class="dash-export-option-card" data-format="docx">
             <div class="dash-opt-header">
               <span class="dash-opt-icon docx">📝</span>
@@ -539,235 +549,35 @@
                 <span class="badge badge-blue" style="font-size:10px;">.DOCX</span>
               </div>
             </div>
-            <p class="dash-opt-desc">Fully formatted Microsoft Word (.docx) audit document with styled tables, editable compliance sections, and security hardening recommendations for engineering teams.</p>
-            <button class="btn btn-secondary btn-dash-download" data-format="docx">
-              <span>⤓</span> Download Word (.docx)
-            </button>
+            <p class="dash-opt-desc">Editable Microsoft Word document with mode metadata table, findings, and inventory tables.</p>
+            <button type="button" class="btn btn-secondary btn-dash-download" data-format="docx">⤓ Download DOCX</button>
           </div>
 
-          <!-- JSON Option -->
           <div class="dash-export-option-card" data-format="json">
             <div class="dash-opt-header">
               <span class="dash-opt-icon json">📦</span>
               <div class="dash-opt-title-box">
-                <h4 class="dash-opt-name">JSON Data Dossier</h4>
+                <h4 class="dash-opt-name">JSON Data</h4>
                 <span class="badge badge-medium" style="font-size:10px;">.JSON</span>
               </div>
             </div>
-            <p class="dash-opt-desc">Raw structured diagnostic payload containing complete subnet device registry, 5-stage scan outputs, XAI attributions, and real-time security event log stream.</p>
-            <button class="btn btn-secondary btn-dash-download" data-format="json">
-              <span>⤓</span> Download JSON (.json)
-            </button>
+            <p class="dash-opt-desc">Structured JSON payload with top-level report metadata, OWASP matrix, and SHAP weights.</p>
+            <button type="button" class="btn btn-secondary btn-dash-download" data-format="json">⤓ Download JSON</button>
           </div>
-
         </div>
       </div>
 
       <div class="modal-footer">
-        <span style="font-size:12px; color:var(--text-muted);">Verified against NIST SP 800-213 &amp; OWASP IoT standard auditing guidelines.</span>
-        <button class="btn btn-secondary" id="btn-cancel-dash-export">Close</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 1. Detail Modal: Network Risk Score Breakdown -->
-  <div id="modal-detail-score" class="modal-overlay" style="display: none;">
-    <div class="modal-card modal-detail-card">
-      <div class="modal-header">
-        <div class="modal-header-left">
-          <span class="modal-icon">🛡️</span>
-          <div>
-            <h2 class="modal-title">Network Risk Score &amp; Posture Breakdown</h2>
-            <p class="modal-sub">Diagnostic quantification based on NIST SP 800-213 &amp; OWASP IoT Top 10 Scoring Rubric</p>
-          </div>
-        </div>
-        <button class="modal-close-btn" id="btn-close-detail-score">✕</button>
-      </div>
-
-      <div class="modal-body">
-        <div class="drilldown-summary-box">
-          <div class="drilldown-score-col">
-            <div class="dash-circle-wrap large">
-              <svg class="dash-ring-svg" viewBox="0 0 76 76">
-                <circle class="dash-ring-bg" cx="38" cy="38" r="32" />
-                <circle class="dash-ring-fill" id="drilldown-score-ring" cx="38" cy="38" r="32" />
-              </svg>
-              <div class="dash-circle-center">
-                <span class="metric-val text-critical" id="drilldown-score-val">48</span>
-                <span class="metric-max">/100</span>
-              </div>
-            </div>
-            <div style="text-align:center; margin-top:8px;">
-              <strong id="drilldown-score-posture" class="text-critical">High Risk Posture</strong>
-              <div style="font-size:11px; color:var(--text-muted);">Network Average</div>
-            </div>
-          </div>
-
-          <div class="drilldown-rubric-col">
-            <h4 style="font-size:13px; color:#fff; margin-bottom:8px;">Scoring Deduction Weights</h4>
-            <div class="rubric-items-grid">
-              <div class="rubric-item">
-                <span class="rubric-name">Plaintext HTTP (No TLS 443)</span>
-                <span class="rubric-deduct">-25 pts / host</span>
-              </div>
-              <div class="rubric-item">
-                <span class="rubric-name">Missing Content-Security-Policy (CSP)</span>
-                <span class="rubric-deduct">-15 pts / host</span>
-              </div>
-              <div class="rubric-item">
-                <span class="rubric-name">Missing X-Frame-Options (Clickjacking)</span>
-                <span class="rubric-deduct">-10 pts / host</span>
-              </div>
-              <div class="rubric-item">
-                <span class="rubric-name">Insecure Session Cookie Flags</span>
-                <span class="rubric-deduct">-10 pts / host</span>
-              </div>
-              <div class="rubric-item">
-                <span class="rubric-name">Critical Vulnerability (DOM XSS / RCE)</span>
-                <span class="rubric-deduct">-20 pts / flaw</span>
-              </div>
-              <div class="rubric-item">
-                <span class="rubric-name">High Flaw (Missing CSRF Nonce)</span>
-                <span class="rubric-deduct">-10 pts / flaw</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <h4 style="font-size:13px; color:#fff; margin: 18px 0 8px 0;">Per-Device Hardening Posture Distribution</h4>
-        <div id="drilldown-device-scores-list" class="drilldown-scores-list">
-          <!-- Dynamically populated via dashboard.js -->
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button class="btn btn-secondary" id="btn-done-detail-score">Close</button>
-        <button class="btn btn-primary" onclick="runNetworkScan()"><span>⚡</span> Run Re-Audit</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 2. Detail Modal: Audited IoT Devices Roster -->
-  <div id="modal-detail-devices" class="modal-overlay" style="display: none;">
-    <div class="modal-card modal-detail-card">
-      <div class="modal-header">
-        <div class="modal-header-left">
-          <span class="modal-icon">📡</span>
-          <div>
-            <h2 class="modal-title">Monitored Connected IoT Devices Roster</h2>
-            <p class="modal-sub">Detailed breakdown of active endpoint nodes, hardware MAC OUIs, and listening services</p>
-          </div>
-        </div>
-        <button class="modal-close-btn" id="btn-close-detail-devices">✕</button>
-      </div>
-
-      <div class="modal-body">
-        <div class="device-cat-stats-row" id="device-cat-stats">
-          <!-- Dynamic category pills -->
-        </div>
-
-        <div class="drilldown-table-wrap">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Status</th>
-                <th>Device Name</th>
-                <th>IP Address</th>
-                <th>MAC / Vendor</th>
-                <th>Category</th>
-                <th>Score</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="drilldown-devices-tbody">
-              <!-- Dynamically populated via dashboard.js -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button class="btn btn-secondary" id="btn-done-detail-devices">Close</button>
-        <button class="btn btn-primary" id="btn-jump-devices-tab">View Full Devices Tab ↗</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 3. Detail Modal: Critical / High Flaws Breakdown -->
-  <div id="modal-detail-flaws" class="modal-overlay" style="display: none;">
-    <div class="modal-card modal-detail-card">
-      <div class="modal-header">
-        <div class="modal-header-left">
-          <span class="modal-icon">⚠️</span>
-          <div>
-            <h2 class="modal-title">Identified Critical &amp; High Vulnerabilities Dossier</h2>
-            <p class="modal-sub">Comprehensive list of detected exploits, DOM sinks, and missing anti-forgery protections</p>
-          </div>
-        </div>
-        <button class="modal-close-btn" id="btn-close-detail-flaws">✕</button>
-      </div>
-
-      <div class="modal-body">
-        <div id="drilldown-flaws-container" class="drilldown-flaws-list">
-          <!-- Dynamically populated via dashboard.js -->
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button class="btn btn-secondary" id="btn-done-detail-flaws">Close</button>
-        <button class="btn btn-primary" id="btn-jump-xai-tab">Inspect XAI SHAP Weights ↗</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 4. Detail Modal: Transport Defense Compliance Matrix -->
-  <div id="modal-detail-transport" class="modal-overlay" style="display: none;">
-    <div class="modal-card modal-detail-card">
-      <div class="modal-header">
-        <div class="modal-header-left">
-          <span class="modal-icon">🔒</span>
-          <div>
-            <h2 class="modal-title">Transport Security &amp; Defensive Headers Compliance</h2>
-            <p class="modal-sub">Standard defense-in-depth header evaluation across all network endpoints</p>
-          </div>
-        </div>
-        <button class="modal-close-btn" id="btn-close-detail-transport">✕</button>
-      </div>
-
-      <div class="modal-body">
-        <div class="transport-stats-grid" id="drilldown-transport-stats">
-          <!-- Dynamic stats -->
-        </div>
-
-        <h4 style="font-size:13px; color:#fff; margin: 16px 0 8px 0;">Per-Device Header Compliance</h4>
-        <div class="drilldown-table-wrap">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Device</th>
-                <th>IP Address</th>
-                <th>HTTPS</th>
-                <th>HSTS</th>
-                <th>CSP</th>
-                <th>X-Frame</th>
-                <th>Cookies</th>
-              </tr>
-            </thead>
-            <tbody id="drilldown-transport-tbody">
-              <!-- Dynamic rows -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button class="btn btn-secondary" id="btn-done-detail-transport">Close</button>
-        <button class="btn btn-primary" id="btn-jump-headers-tab">View Headers Tab ↗</button>
+        <span style="font-size:12px; color:var(--text-muted);">Mode 1 and Mode 2 reports are strictly isolated.</span>
+        <button type="button" class="btn btn-secondary" id="btn-cancel-dash-export">Close</button>
       </div>
     </div>
   </div>
 
   <script src="export-utils.js"></script>
+  <script src="configManager.js"></script>
+  <script src="webScanner.js"></script>
+  <script src="iotAuditor.js"></script>
   <script src="dashboard.js"></script>
 </body>
 </html>

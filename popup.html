@@ -8,126 +8,314 @@
 </head>
 <body>
 
-  <!-- Top Header & Engine Status -->
+  <!-- Top Header Bar: Brand, Configured Managing URL, Live Status, Change URL -->
   <header class="app-header">
-    <div class="brand">
-      <span class="brand-icon">🛡️</span>
-      <div>
-        <h1 class="brand-title">IoT Auditor</h1>
-        <span class="engine-badge" id="wasm-status">Rust / Wasm Active</span>
+    <div class="header-top-row">
+      <div class="brand">
+        <span class="brand-icon">🛡️</span>
+        <div>
+          <h1 class="brand-title">IoT Security Auditor</h1>
+          <span class="engine-badge" id="wasm-status">Rust / Wasm + SHAP</span>
+        </div>
+      </div>
+
+      <div class="conn-badge status-not-configured" id="connection-status-badge" title="Managing Server Connection Status">
+        <span class="conn-dot"></span>
+        <span id="connection-status-text">Not Configured</span>
       </div>
     </div>
-    <div class="live-status">
-      <span class="status-pulse"></span>
-      <span class="status-text">Live Monitoring</span>
+
+    <div class="managing-bar">
+      <div class="managing-info">
+        <span class="managing-label">IoT Server:</span>
+        <span class="managing-url" id="managing-url-display">Not Configured</span>
+      </div>
+      <button type="button" class="btn-change-url" id="btn-change-url">Change URL</button>
+    </div>
+
+    <!-- Inline Settings Panel for Dynamic URL Switching -->
+    <div class="url-settings-panel" id="url-settings-panel" style="display: none;">
+      <label class="settings-label" for="input-managing-url">IoT Managing Website URL (http:// or https://)</label>
+      <div class="settings-input-row">
+        <input
+          type="url"
+          id="input-managing-url"
+          class="settings-input"
+          placeholder="https://your-iot-server.example:8080"
+          autocomplete="off"
+        >
+      </div>
+      <div class="settings-feedback" id="url-settings-feedback"></div>
+      <div class="settings-actions">
+        <button type="button" class="btn btn-primary btn-xs" id="btn-save-url">Save &amp; Connect</button>
+        <button type="button" class="btn btn-secondary btn-xs" id="btn-test-url">Test</button>
+        <button type="button" class="btn btn-secondary btn-xs" id="btn-clear-url">Clear</button>
+        <button type="button" class="btn btn-ghost btn-xs" id="btn-cancel-url">Cancel</button>
+      </div>
     </div>
   </header>
 
-  <!-- Target Metadata -->
-  <section class="target-section">
-    <div class="target-row">
-      <span class="target-label">Target Gateway:</span>
-      <span class="target-url" id="target-url">http://192.168.1.1/admin</span>
-    </div>
-  </section>
+  <!-- Two Prominent Side-by-Side Mode Cards / Tabs -->
+  <nav class="mode-switcher" aria-label="Audit Modes">
+    <button type="button" class="mode-card active" id="mode-tab-website" data-mode="website">
+      <div class="mode-card-top">
+        <span class="mode-icon">🌐</span>
+        <span class="mode-pill">Mode 1</span>
+      </div>
+      <div class="mode-title">Website Security Scan</div>
+      <div class="mode-desc">Active tab DOM, headers, cookies &amp; scripts</div>
+    </button>
 
-  <!-- Security Score & Severity Counters -->
-  <section class="score-card">
-    <div class="score-display">
-      <div class="score-circle-wrap">
-        <svg class="score-ring-svg" viewBox="0 0 60 60">
-          <circle class="score-ring-bg" cx="30" cy="30" r="25" />
-          <circle class="score-ring-fill" id="score-ring-fill" cx="30" cy="30" r="25" />
-        </svg>
-        <div class="score-circle-center">
-          <span class="score-number" id="security-score">42</span>
-          <span class="score-max">/100</span>
+    <button type="button" class="mode-card" id="mode-tab-iot" data-mode="iot">
+      <div class="mode-card-top">
+        <span class="mode-icon">📡</span>
+        <span class="mode-pill">Mode 2</span>
+      </div>
+      <div class="mode-title">IoT Anomaly Audit</div>
+      <div class="mode-desc">OWASP IoT Top 10 + Rust/Wasm SHAP telemetry</div>
+    </button>
+  </nav>
+
+  <!-- ========================================================= -->
+  <!-- MODE 1 PANEL: Website Security Scan (Strictly Isolated)   -->
+  <!-- ========================================================= -->
+  <main id="panel-website" class="mode-panel active">
+    <section class="target-section">
+      <div class="target-row">
+        <span class="target-label">Active Tab:</span>
+        <span class="target-url" id="web-target-url">Detecting active tab...</span>
+      </div>
+    </section>
+
+    <div id="web-error-banner" class="alert-banner alert-error" style="display: none;"></div>
+
+    <!-- Website Score Card -->
+    <section class="score-card">
+      <div class="score-display">
+        <div class="score-circle-wrap">
+          <svg class="score-ring-svg" viewBox="0 0 60 60">
+            <circle class="score-ring-bg" cx="30" cy="30" r="25" />
+            <circle class="score-ring-fill" id="web-score-ring-fill" cx="30" cy="30" r="25" />
+          </svg>
+          <div class="score-circle-center">
+            <span class="score-number" id="web-security-score">--</span>
+            <span class="score-max">/100</span>
+          </div>
+        </div>
+        <div class="score-meta">
+          <span class="score-rating" id="web-score-rating">Ready to Scan</span>
+          <span class="score-subtext" id="web-score-subtext">Run Mode 1 to audit the active browser tab</span>
         </div>
       </div>
-      <div class="score-meta">
-        <span class="score-rating">High Risk Posture</span>
-        <span class="score-subtext">Immediate remediation required</span>
-      </div>
-    </div>
 
-    <div class="severity-grid">
-      <div class="severity-item critical">
-        <span class="sev-count" id="count-critical">2</span>
-        <span class="sev-label">Critical</span>
+      <div class="severity-grid">
+        <div class="severity-item critical">
+          <span class="sev-count" id="web-count-critical">0</span>
+          <span class="sev-label">Critical</span>
+        </div>
+        <div class="severity-item high">
+          <span class="sev-count" id="web-count-high">0</span>
+          <span class="sev-label">High</span>
+        </div>
+        <div class="severity-item medium">
+          <span class="sev-count" id="web-count-medium">0</span>
+          <span class="sev-label">Medium</span>
+        </div>
+        <div class="severity-item low">
+          <span class="sev-count" id="web-count-low">0</span>
+          <span class="sev-label">Low</span>
+        </div>
       </div>
-      <div class="severity-item high">
-        <span class="sev-count" id="count-high">1</span>
-        <span class="sev-label">High</span>
-      </div>
-      <div class="severity-item medium">
-        <span class="sev-count" id="count-medium">3</span>
-        <span class="sev-label">Medium</span>
-      </div>
-      <div class="severity-item low">
-        <span class="sev-count" id="count-low">0</span>
-        <span class="sev-label">Low</span>
-      </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- Transport & Header Integrity Panel -->
-  <section class="integrity-section">
-    <h2 class="section-title">Transport & Header Defenses</h2>
-    <div class="integrity-grid">
-      <div class="integrity-badge fail" id="chk-https">
-        <span class="badge-icon">✕</span> HTTPS / HSTS
+    <!-- Transport & Header Defenses -->
+    <section class="integrity-section">
+      <h2 class="section-title">Transport, Script &amp; Cookie Defenses</h2>
+      <div class="integrity-grid">
+        <div class="integrity-badge neutral" id="web-chk-https">
+          <span class="badge-icon">•</span> HTTPS / TLS
+        </div>
+        <div class="integrity-badge neutral" id="web-chk-csp">
+          <span class="badge-icon">•</span> CSP Header
+        </div>
+        <div class="integrity-badge neutral" id="web-chk-xframe">
+          <span class="badge-icon">•</span> X-Frame-Options
+        </div>
+        <div class="integrity-badge neutral" id="web-chk-cookies">
+          <span class="badge-icon">•</span> Secure Cookies
+        </div>
       </div>
-      <div class="integrity-badge fail" id="chk-csp">
-        <span class="badge-icon">✕</span> CSP Header
-      </div>
-      <div class="integrity-badge pass" id="chk-xframe">
-        <span class="badge-icon">✓</span> X-Frame-Options
-      </div>
-      <div class="integrity-badge fail" id="chk-cookies">
-        <span class="badge-icon">✕</span> Secure Cookie
-      </div>
-    </div>
-  </section>
+      <div class="metrics-strip" id="web-metrics-strip" style="display: none;"></div>
+    </section>
 
-  <!-- Vulnerability Feed & Explainable AI (XAI) -->
-  <section class="findings-section">
-    <div class="findings-header">
-      <h2 class="section-title">Detected Findings</h2>
-      <!-- Severity Filter -->
-      <div class="filter-group">
-        <button class="filter-btn active" data-filter="all">All</button>
-        <button class="filter-btn" data-filter="critical">Critical</button>
-        <button class="filter-btn" data-filter="high">High</button>
-        <button class="filter-btn" data-filter="medium">Med</button>
+    <!-- Website Findings List -->
+    <section class="findings-section">
+      <div class="findings-header">
+        <h2 class="section-title">Website Findings</h2>
+        <div class="filter-group" data-mode-filter="website">
+          <button type="button" class="filter-btn active" data-filter="all">All</button>
+          <button type="button" class="filter-btn" data-filter="critical">Crit</button>
+          <button type="button" class="filter-btn" data-filter="high">High</button>
+          <button type="button" class="filter-btn" data-filter="medium">Med</button>
+        </div>
       </div>
-    </div>
+      <div class="findings-list" id="web-findings-container">
+        <div class="empty-state">
+          <div class="empty-icon">🌐</div>
+          Click <strong>Run Website Scan</strong> to inspect DOM sinks, HTTP headers, cookies, and scripts on the active tab.
+        </div>
+      </div>
+    </section>
 
-    <div class="findings-list" id="findings-container">
-      <!-- Dynamically rendered and filtered via popup.js -->
-    </div>
-  </section>
-
-  <!-- Controls & Export Actions -->
-  <footer class="app-footer">
-    <!-- Inline Audit Progress Indicator -->
-    <div id="popup-scan-progress" class="popup-progress-container" style="display: none;">
+    <!-- Mode 1 Progress & Actions -->
+    <div id="web-scan-progress" class="popup-progress-container" style="display: none;">
       <div class="popup-progress-track">
-        <div id="popup-progress-fill" class="popup-progress-fill" style="width: 0%;"></div>
+        <div id="web-progress-fill" class="popup-progress-fill" style="width: 0%;"></div>
       </div>
       <div class="popup-progress-meta">
-        <span id="popup-progress-status" class="popup-progress-status">Auditing DOM & Headers...</span>
-        <span id="popup-progress-percent" class="popup-progress-percent">0%</span>
+        <span id="web-progress-status" class="popup-progress-status">Preparing website scan...</span>
+        <span id="web-progress-percent" class="popup-progress-percent">0%</span>
       </div>
     </div>
 
     <div class="btn-group">
-      <button class="btn btn-primary btn-run-audit" id="btn-run-audit">
-        <span id="btn-audit-icon">🛡️</span> Run Audit
+      <button type="button" class="btn btn-primary btn-run-audit" id="btn-run-web-scan">
+        <span>🌐</span> Run Website Scan
       </button>
-      <button class="btn btn-secondary" id="btn-export-report">
+      <button type="button" class="btn btn-secondary" id="btn-export-web" disabled>
         <span>⤓</span> Export Report
       </button>
     </div>
+  </main>
+
+  <!-- ========================================================= -->
+  <!-- MODE 2 PANEL: IoT Network Anomaly Audit (OWASP IoT Top 10)-->
+  <!-- ========================================================= -->
+  <main id="panel-iot" class="mode-panel">
+    <section class="target-section">
+      <div class="target-row space-between">
+        <div class="target-inline">
+          <span class="target-label">Managing Server:</span>
+          <span class="target-url" id="iot-server-url">Not Configured</span>
+        </div>
+        <button type="button" class="btn-link-sm" id="btn-iot-logout" style="display: none;" title="Clear cached ThingsBoard session token">Sign Out</button>
+      </div>
+    </section>
+
+    <!-- Unconfigured Server Prompt -->
+    <div id="iot-unconfigured-prompt" class="prompt-card" style="display: none;">
+      <div class="prompt-title">No IoT Managing Server Configured</div>
+      <p class="prompt-desc">Set your ThingsBoard or IoT management server URL to pull devices, telemetry, and evaluate against the OWASP IoT Top 10.</p>
+      <button type="button" class="btn btn-primary btn-xs" id="btn-open-url-from-iot">Configure Managing Server URL</button>
+    </div>
+
+    <!-- Fallback ThingsBoard Login Form -->
+    <section id="tb-login-panel" class="login-card" style="display: none;">
+      <div class="login-header">
+        <span class="login-title">🔐 ThingsBoard Authentication Required</span>
+        <button type="button" class="btn-close-sm" id="btn-close-tb-login" title="Dismiss">✕</button>
+      </div>
+      <p class="login-sub">No active <code>jwt_token</code> found in an open tab. Sign in via <code>/api/auth/login</code>:</p>
+      <div class="login-fields">
+        <input type="text" id="tb-username" class="settings-input" placeholder="Username or Email" autocomplete="username">
+        <input type="password" id="tb-password" class="settings-input" placeholder="Password" autocomplete="current-password">
+      </div>
+      <div id="tb-login-error" class="settings-feedback error"></div>
+      <button type="button" class="btn btn-primary btn-xs full-width" id="btn-tb-login-submit">Sign In &amp; Run IoT Audit</button>
+    </section>
+
+    <div id="iot-error-banner" class="alert-banner alert-error" style="display: none;"></div>
+
+    <!-- IoT Score Card -->
+    <section class="score-card">
+      <div class="score-display">
+        <div class="score-circle-wrap">
+          <svg class="score-ring-svg" viewBox="0 0 60 60">
+            <circle class="score-ring-bg" cx="30" cy="30" r="25" />
+            <circle class="score-ring-fill" id="iot-score-ring-fill" cx="30" cy="30" r="25" />
+          </svg>
+          <div class="score-circle-center">
+            <span class="score-number" id="iot-security-score">--</span>
+            <span class="score-max">/100</span>
+          </div>
+        </div>
+        <div class="score-meta">
+          <span class="score-rating" id="iot-score-rating">Ready to Audit</span>
+          <span class="score-subtext" id="iot-score-subtext">OWASP IoT Top 10 + Rust/Wasm SHAP</span>
+        </div>
+      </div>
+
+      <div class="severity-grid">
+        <div class="severity-item critical">
+          <span class="sev-count" id="iot-count-critical">0</span>
+          <span class="sev-label">Critical</span>
+        </div>
+        <div class="severity-item high">
+          <span class="sev-count" id="iot-count-high">0</span>
+          <span class="sev-label">High</span>
+        </div>
+        <div class="severity-item medium">
+          <span class="sev-count" id="iot-count-medium">0</span>
+          <span class="sev-label">Medium</span>
+        </div>
+        <div class="severity-item low">
+          <span class="sev-count" id="iot-count-low">0</span>
+          <span class="sev-label">Low</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Audited Devices Summary & OWASP IoT Top 10 Matrix -->
+    <section class="integrity-section" id="iot-devices-section" style="display: none;">
+      <div class="findings-header">
+        <h2 class="section-title">Audited IoT Devices</h2>
+        <span class="count-pill" id="iot-devices-count">0 devices</span>
+      </div>
+      <div class="devices-mini-list" id="iot-devices-list"></div>
+      <div class="owasp-popup-strip" id="iot-owasp-strip"></div>
+    </section>
+
+    <!-- IoT Anomaly Findings List -->
+    <section class="findings-section">
+      <div class="findings-header">
+        <h2 class="section-title">OWASP IoT Top 10 Anomalies</h2>
+        <div class="filter-group" data-mode-filter="iot">
+          <button type="button" class="filter-btn active" data-filter="all">All</button>
+          <button type="button" class="filter-btn" data-filter="critical">Crit</button>
+          <button type="button" class="filter-btn" data-filter="high">High</button>
+          <button type="button" class="filter-btn" data-filter="medium">Med</button>
+        </div>
+      </div>
+      <div class="findings-list" id="iot-findings-container">
+        <div class="empty-state">
+          <div class="empty-icon">📡</div>
+          Click <strong>Run IoT Anomaly Audit</strong> to pull device telemetry from your managing server and evaluate OWASP IoT Top 10 risks.
+        </div>
+      </div>
+    </section>
+
+    <!-- Mode 2 Progress & Actions -->
+    <div id="iot-scan-progress" class="popup-progress-container" style="display: none;">
+      <div class="popup-progress-track">
+        <div id="iot-progress-fill" class="popup-progress-fill" style="width: 0%;"></div>
+      </div>
+      <div class="popup-progress-meta">
+        <span id="iot-progress-status" class="popup-progress-status">Preparing IoT audit...</span>
+        <span id="iot-progress-percent" class="popup-progress-percent">0%</span>
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <button type="button" class="btn btn-primary btn-run-audit" id="btn-run-iot-audit">
+        <span>📡</span> Run IoT Anomaly Audit
+      </button>
+      <button type="button" class="btn btn-secondary" id="btn-export-iot" disabled>
+        <span>⤓</span> Export Report
+      </button>
+    </div>
+  </main>
+
+  <footer class="app-footer">
     <div class="full-view-row">
       <a href="#" class="full-dashboard-link" id="link-expanded-view">Open Full Security Dashboard ↗</a>
     </div>
@@ -138,25 +326,25 @@
     <div class="export-modal-card">
       <div class="export-modal-header">
         <div class="export-modal-title">
-          <span>⤓</span> Export Audit Report
+          <span>⤓</span> <span id="export-modal-heading">Export Audit Report</span>
         </div>
-        <button class="export-modal-close" id="btn-close-export-modal" title="Close">✕</button>
+        <button type="button" class="export-modal-close" id="btn-close-export-modal" title="Close">✕</button>
       </div>
-      <p class="export-modal-desc">Select the desired file format to download:</p>
-      
+      <p class="export-modal-desc" id="export-modal-desc">Select the desired file format to download:</p>
+
       <div class="export-options-list">
-        <button class="export-opt-btn" data-format="pdf">
+        <button type="button" class="export-opt-btn" data-format="pdf">
           <span class="opt-icon pdf">📄</span>
           <div class="opt-text">
             <div class="opt-title-row">
               <span class="opt-title">PDF Document</span>
               <span class="opt-badge">.pdf</span>
             </div>
-            <span class="opt-desc">Executive report with findings &amp; headers</span>
+            <span class="opt-desc">Executive report with mode metadata &amp; findings</span>
           </div>
         </button>
 
-        <button class="export-opt-btn" data-format="docx">
+        <button type="button" class="export-opt-btn" data-format="docx">
           <span class="opt-icon docx">📝</span>
           <div class="opt-text">
             <div class="opt-title-row">
@@ -167,14 +355,14 @@
           </div>
         </button>
 
-        <button class="export-opt-btn" data-format="json">
+        <button type="button" class="export-opt-btn" data-format="json">
           <span class="opt-icon json">📦</span>
           <div class="opt-text">
             <div class="opt-title-row">
               <span class="opt-title">JSON Data</span>
               <span class="opt-badge">.json</span>
             </div>
-            <span class="opt-desc">Raw diagnostic state &amp; XAI attributions</span>
+            <span class="opt-desc">Structured metadata, telemetry &amp; SHAP weights</span>
           </div>
         </button>
       </div>
@@ -182,6 +370,9 @@
   </div>
 
   <script src="export-utils.js"></script>
+  <script src="configManager.js"></script>
+  <script src="webScanner.js"></script>
+  <script src="iotAuditor.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

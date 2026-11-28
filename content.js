@@ -1,13 +1,13 @@
 // content.js
+// On-demand DOM scanner helper (injected only when Mode 1 Website Security Scan runs).
 
-// Execute passive DOM security analysis
-function scanIoTPage() {
+function scanActivePageDOM() {
   const findings = [];
   const counts = { critical: 0, high: 0, medium: 0, low: 0 };
 
   // Clear previous injected warning UI
-  document.querySelectorAll(".iot-sec-warning-badge").forEach(el => el.remove());
-  document.querySelectorAll(".iot-sec-highlight").forEach(el => el.classList.remove("iot-sec-highlight"));
+  document.querySelectorAll(".iot-sec-warning-badge").forEach((el) => el.remove());
+  document.querySelectorAll(".iot-sec-highlight").forEach((el) => el.classList.remove("iot-sec-highlight"));
 
   // 1. Audit Forms for Missing CSRF Nonces on State-Changing Actions
   const forms = document.querySelectorAll("form");
@@ -17,7 +17,7 @@ function scanIoTPage() {
 
     if (method === "POST" || method === "PUT" || method === "DELETE") {
       const inputs = Array.from(form.querySelectorAll("input"));
-      const hasCsrfToken = inputs.some(input => {
+      const hasCsrfToken = inputs.some((input) => {
         const name = (input.name || "").toLowerCase();
         return name.includes("csrf") || name.includes("token") || name.includes("_nonce");
       });
@@ -25,7 +25,7 @@ function scanIoTPage() {
       if (!hasCsrfToken) {
         counts.high++;
         form.classList.add("iot-sec-highlight");
-        
+
         findings.push({
           id: `csrf_${idx}`,
           type: "Missing CSRF Token",
@@ -48,11 +48,9 @@ function scanIoTPage() {
     const nameAttr = input.name || input.id || `input_${idx}`;
     const value = input.value || "";
 
-    // Identify unsanitized script tags, event handlers, or raw tags
     const xssPattern = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*>|javascript:|onerror=|onload=/gi;
     const containsSuspiciousPayload = xssPattern.test(value) || xssPattern.test(window.location.search);
 
-    // Flag unescaped input fields
     if (containsSuspiciousPayload || input.hasAttribute("onchange") || input.hasAttribute("oninput")) {
       counts.critical++;
       input.classList.add("iot-sec-highlight");
@@ -73,14 +71,9 @@ function scanIoTPage() {
     }
   });
 
-  // Send findings to Background Service Worker
-  chrome.runtime.sendMessage({
-    type: "DOM_FINDINGS_REPORTED",
-    payload: { findings, counts }
-  });
+  return { findings, counts };
 }
 
-// Injects warning icons directly next to vulnerable DOM elements
 function injectWarningBadge(targetElement, label) {
   const badge = document.createElement("span");
   badge.className = "iot-sec-warning-badge";
@@ -92,17 +85,11 @@ function injectWarningBadge(targetElement, label) {
   }
 }
 
-// Run initial scan once DOM is ready
-if (document.readyState === "complete" || document.readyState === "interactive") {
-  scanIoTPage();
-} else {
-  document.addEventListener("DOMContentLoaded", scanIoTPage);
+if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage) {
+  chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
+    if (request.type === "EXECUTE_DOM_SCAN") {
+      const result = scanActivePageDOM();
+      sendResponse({ status: "COMPLETED", payload: result });
+    }
+  });
 }
-
-// Listen for on-demand re-scan commands from popup
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.type === "EXECUTE_DOM_SCAN") {
-    scanIoTPage();
-    sendResponse({ status: "COMPLETED" });
-  }
-});
